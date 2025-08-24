@@ -24,7 +24,7 @@ on:
 env:
   IS_GITHUB_ACTIONS: 1
   CHANNEL: "prod"
-  FLUTTER_VERSION: '3.24.0'
+  FLUTTER_VERSION: '3.22.2'
   TARGET_NAME_apk: "HiddifyWithPanels-Android"
   TARGET_NAME_exe: "HiddifyWithPanels-Windows-x64"
   TARGET_NAME_dmg: "HiddifyWithPanels-MacOS"
@@ -77,6 +77,14 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
         run: |
+          echo "=== Debug Environment Variables ==="
+          echo "ANDROID_KEY_ALIAS: $ANDROID_KEY_ALIAS"
+          echo "ANDROID_KEY_PASSWORD: $ANDROID_KEY_PASSWORD"
+          echo "ANDROID_STORE_PASSWORD: $ANDROID_STORE_PASSWORD"
+          echo "ANDROID_KEYSTORE_PATH: $ANDROID_KEYSTORE_PATH"
+          echo "Keystore file exists: $(test -f $ANDROID_KEYSTORE_PATH && echo 'YES' || echo 'NO')"
+          echo "Keystore file size: $(ls -la $ANDROID_KEYSTORE_PATH 2>/dev/null || echo 'File not found')"
+          echo "=================================="
           flutter build apk --release
 
       - name: Build AAB
@@ -86,6 +94,10 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
         run: |
+          echo "=== Debug Environment Variables ==="
+          echo "ANDROID_KEY_ALIAS: $ANDROID_KEY_ALIAS"
+          echo "ANDROID_KEYSTORE_PATH: $ANDROID_KEYSTORE_PATH"
+          echo "=================================="
           flutter build appbundle --release
 
       - name: Upload Android Artifacts
