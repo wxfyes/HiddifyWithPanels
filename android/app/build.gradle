@@ -73,24 +73,21 @@ android {
         }
     }
 
-    if (hasKeyStore) {
-        signingConfigs {
-            release {
+    signingConfigs {
+        release {
+            if (System.getenv('ANDROID_KEY_ALIAS') != null) {
+                // 使用环境变量（GitHub Actions）
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+                storeFile file(System.getenv('ANDROID_KEYSTORE_PATH'))
+                storePassword System.getenv('ANDROID_STORE_PASSWORD')
+            } else if (hasKeyStore) {
+                // 使用本地key.properties
                 keyAlias keystoreProperties['keyAlias']
                 keyPassword keystoreProperties['keyPassword']
                 storeFile file(keystoreProperties['storeFile'])
                 storePassword keystoreProperties['storePassword']
             }
-        }
-    }
-
-    // 添加环境变量签名配置
-    signingConfigs {
-        release {
-            keyAlias System.getenv('ANDROID_KEY_ALIAS') ?: (hasKeyStore ? keystoreProperties['keyAlias'] : '')
-            keyPassword System.getenv('ANDROID_KEY_PASSWORD') ?: (hasKeyStore ? keystoreProperties['keyPassword'] : '')
-            storeFile file(System.getenv('ANDROID_KEYSTORE_PATH') ?: (hasKeyStore ? keystoreProperties['storeFile'] : ''))
-            storePassword System.getenv('ANDROID_STORE_PASSWORD') ?: (hasKeyStore ? keystoreProperties['storePassword'] : '')
         }
     }
 
