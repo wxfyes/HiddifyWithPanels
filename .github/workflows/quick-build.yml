@@ -1,0 +1,189 @@
+name: Quick Build
+
+on:
+  push:
+    branches: [ develop, dev ]
+  pull_request:
+    branches: [ main, master, develop, dev ]
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build'
+        required: true
+        default: 'android'
+        type: choice
+        options:
+        - android
+        - windows
+        - macos
+        - linux
+
+env:
+  IS_GITHUB_ACTIONS: 1
+  CHANNEL: "dev"
+  FLUTTER_VERSION: '3.24.0'
+
+jobs:
+  build_android:
+    if: github.event.inputs.platform == 'android' || github.event.inputs.platform == ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+
+      - name: Prepare for Android
+        run: |
+          make android-prepare
+          tree
+
+      - name: Build Android
+        run: |
+          flutter build apk --debug
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build
+          path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 7
+
+  build_windows:
+    if: github.event.inputs.platform == 'windows' || github.event.inputs.platform == ''
+    runs-on: windows-2019
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+
+      - name: Prepare for Windows
+        run: |
+          make windows-prepare
+          tree
+
+      - name: Build Windows
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          make windows-release
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            dist/
+            out/
+          retention-days: 7
+
+  build_macos:
+    if: github.event.inputs.platform == 'macos' || github.event.inputs.platform == ''
+    runs-on: macos-13
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Setup dependencies
+        run: |
+          make macos-install-dependencies
+
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+
+      - name: Prepare for macOS
+        run: |
+          make macos-prepare
+          tree
+
+      - name: Build macOS
+        run: |
+          make macos-release
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: |
+            dist/
+            out/
+          retention-days: 7
+
+  build_linux:
+    if: github.event.inputs.platform == 'linux' || github.event.inputs.platform == ''
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Setup dependencies
+        run: make linux-install-dependencies
+
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+
+      - name: Prepare for Linux
+        run: make linux-prepare
+
+      - name: Build Linux
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: make linux-release
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: |
+            dist/
+            out/
+          retention-days: 7

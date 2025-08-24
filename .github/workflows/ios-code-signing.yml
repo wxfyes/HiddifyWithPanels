@@ -1,0 +1,82 @@
+name: iOS Build with Code Signing
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+        - debug
+        - release
+
+env:
+  IS_GITHUB_ACTIONS: 1
+  CHANNEL: "prod"
+  FLUTTER_VERSION: '3.24.0'
+
+jobs:
+  build_ios:
+    runs-on: macos-12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+  
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+  
+      - name: Clean Flutter Build
+        run: |
+          flutter clean
+  
+      - name: Get Flutter Packages
+        run: |
+          flutter pub get
+  
+      - name: Reinstall iOS Dependencies
+        run: |
+          cd ios
+          rm -rf Pods Podfile.lock
+          pod install
+          
+      - name: Install tree
+        run: brew install tree
+
+      - name: Prepare for iOS
+        run: |
+          make ios-prepare
+          tree
+
+      - name: Setup iOS Code Signing
+        if: github.event.inputs.build_type == 'release'
+        uses: apple-actions/import-codesigning-certs@v1
+        with:
+          p12-file-base64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE }}
+          p12-password: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          provisioning-profile-base64: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+
+      - name: Build iOS
+        run: |
+          if [ "${{ github.event.inputs.build_type }}" = "release" ]; then
+            flutter build ipa --release
+          else
+            flutter build ipa --debug
+          fi
+  
+      - name: Package iOS
+        run: |
+          mkdir out
+          mv build/ios/ipa/*.ipa out/HiddifyWithPanels-iOS-${{ github.event.inputs.build_type }}.ipa
+  
+      - name: Upload iOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-${{ github.event.inputs.build_type }}
+          path: ./out
+          retention-days: 30

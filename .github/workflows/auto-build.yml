@@ -1,0 +1,324 @@
+name: Auto Build All Platforms
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build (all, android, windows, macos, linux, ios)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - android
+        - windows
+        - macos
+        - linux
+        - ios
+
+env:
+  IS_GITHUB_ACTIONS: 1
+  CHANNEL: "prod"
+  FLUTTER_VERSION: '3.24.0'
+  TARGET_NAME_apk: "HiddifyWithPanels-Android"
+  TARGET_NAME_exe: "HiddifyWithPanels-Windows-x64"
+  TARGET_NAME_dmg: "HiddifyWithPanels-MacOS"
+  TARGET_NAME_pkg: "HiddifyWithPanels-MacOS-Installer"
+  TARGET_NAME_ipa: "HiddifyWithPanels-iOS"
+  TARGET_NAME_AppImage: "HiddifyWithPanels-Linux-x64"
+  TARGET_NAME_deb: "HiddifyWithPanels-Debian-x64"
+  TARGET_NAME_rpm: "HiddifyWithPanels-rpm-x64"
+
+jobs:
+  build_android:
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'android' || github.event.inputs.platform == ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+          
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          
+      - name: Setup Android Signing
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/hiddify-with-panels.keystore
+          
+      - name: Prepare for Android
+        run: |
+          make android-prepare
+          tree
+          
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+
+      - name: Build APK
+        env:
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEYSTORE_PATH: android/app/hiddify-with-panels.keystore
+        run: |
+          flutter build apk --release
+
+      - name: Build AAB
+        env:
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEYSTORE_PATH: android/app/hiddify-with-panels.keystore
+        run: |
+          flutter build appbundle --release
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-builds
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
+          retention-days: 30
+
+  build_windows:
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows' || github.event.inputs.platform == ''
+    runs-on: windows-2019
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run slang
+
+      - name: Prepare for Windows
+        run: |
+          make windows-prepare
+          tree
+
+      - name: Build Windows
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          make windows-release
+  
+      - name: Package Windows
+        run: |
+          .\\scripts\\package_windows.ps1
+          
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-builds
+          path: ./out
+          retention-days: 30
+
+  build_macos:
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos' || github.event.inputs.platform == ''
+    runs-on: macos-13
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Setup dependencies
+        run: |
+          make macos-install-dependencies
+
+      - name: Prepare for macOS
+        run: |
+          make macos-prepare
+          tree
+
+      - name: Build macOS
+        run: |
+          make macos-release
+
+      - name: Package macOS
+        run: |
+          mkdir out
+          mv dist/*/*.dmg out/${TARGET_NAME_dmg}.dmg
+          mv dist/*/*.pkg out/${TARGET_NAME_pkg}.pkg
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-builds
+          path: ./out
+          retention-days: 30
+
+  build_linux:
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux' || github.event.inputs.platform == ''
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Setup dependencies
+        run: make linux-install-dependencies
+
+      - name: Prepare for Linux
+        run: make linux-prepare
+
+      - name: Build Linux
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: make linux-release
+
+      - name: Package Linux
+        run: |
+          ls -R dist/
+          mkdir out
+          mkdir tmp_out
+          for EXT in AppImage deb rpm; do
+            KEY=TARGET_NAME_${EXT}
+            FILENAME=${!KEY}
+            echo "For $EXT ($KEY) filename is ${FILENAME}"
+            mv dist/*/*.$EXT tmp_out/${FILENAME}.$EXT
+            ls tmp_out
+            chmod +x tmp_out/${FILENAME}.$EXT
+            cp ./.github/help/linux/* tmp_out/
+            mv tmp_out/${FILENAME}.$EXT out/
+          done
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds
+          path: ./out
+          retention-days: 30
+
+  build_ios:
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'ios' || github.event.inputs.platform == ''
+    runs-on: macos-12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+  
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+  
+      - name: Clean Flutter Build
+        run: |
+          flutter clean
+  
+      - name: Get Flutter Packages
+        run: |
+          flutter pub get
+  
+      - name: Reinstall iOS Dependencies
+        run: |
+          cd ios
+          rm -rf Pods Podfile.lock
+          pod install
+          
+      - name: Install tree
+        run: brew install tree
+
+      - name: Prepare for iOS
+        run: |
+          make ios-prepare
+          tree
+  
+      - name: Build iOS (No Code Sign)
+        run: |
+          flutter build ipa --no-codesign
+  
+      - name: Package iOS
+        run: |
+          mkdir out
+          mv build/ios/ipa/*.ipa out/${TARGET_NAME_ipa}-unsigned.ipa
+  
+      - name: Upload iOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-builds
+          path: ./out
+          retention-days: 30
+
+  create_release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build_android, build_windows, build_macos, build_linux, build_ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## HiddifyWithPanels ${{ github.ref_name }}
+            
+            ### Downloads
+            - **Android**: APK and AAB files available
+            - **Windows**: Setup and Portable versions
+            - **macOS**: DMG and PKG installers
+            - **Linux**: AppImage, DEB, and RPM packages
+            - **iOS**: Unsigned IPA file (for development/testing only)
+            
+            ### Changes
+            See the [changelog](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for detailed changes.
+            
+            ### iOS Note
+            The iOS IPA file is unsigned and cannot be installed on devices without developer tools. 
+            For distribution, you need an Apple Developer account and code signing.
+          files: |
+            artifacts/android-builds/*
+            artifacts/windows-builds/*
+            artifacts/macos-builds/*
+            artifacts/linux-builds/*
+            artifacts/ios-builds/*
+          draft: false
+          prerelease: false

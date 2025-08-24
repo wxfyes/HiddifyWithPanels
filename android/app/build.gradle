@@ -84,9 +84,22 @@ android {
         }
     }
 
+    // 添加环境变量签名配置
+    signingConfigs {
+        release {
+            keyAlias System.getenv('ANDROID_KEY_ALIAS') ?: (hasKeyStore ? keystoreProperties['keyAlias'] : '')
+            keyPassword System.getenv('ANDROID_KEY_PASSWORD') ?: (hasKeyStore ? keystoreProperties['keyPassword'] : '')
+            storeFile file(System.getenv('ANDROID_KEYSTORE_PATH') ?: (hasKeyStore ? keystoreProperties['storeFile'] : ''))
+            storePassword System.getenv('ANDROID_STORE_PASSWORD') ?: (hasKeyStore ? keystoreProperties['storePassword'] : '')
+        }
+    }
+
     buildTypes {
         release {
-            if (hasKeyStore) {
+            // 优先使用环境变量签名配置，如果没有则使用key.properties
+            if (System.getenv('ANDROID_KEY_ALIAS') != null) {
+                signingConfig signingConfigs.release
+            } else if (hasKeyStore) {
                 signingConfig signingConfigs.release
             } else {
                 signingConfig signingConfigs.debug
