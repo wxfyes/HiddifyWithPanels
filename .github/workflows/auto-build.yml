@@ -57,7 +57,7 @@ jobs:
           
       - name: Setup Android Signing
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/hiddify-with-panels.keystore
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
           
       - name: Prepare for Android
         run: |
@@ -75,7 +75,7 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          ANDROID_KEYSTORE_PATH: android/app/hiddify-with-panels.keystore
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
         run: |
           flutter build apk --release
 
@@ -84,7 +84,7 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          ANDROID_KEYSTORE_PATH: android/app/hiddify-with-panels.keystore
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
         run: |
           flutter build appbundle --release
 
