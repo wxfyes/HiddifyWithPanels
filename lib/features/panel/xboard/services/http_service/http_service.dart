@@ -56,21 +56,40 @@ class HttpService {
     final url = Uri.parse('$baseUrl$endpoint');
 
     try {
+      // 将JSON数据转换为URL编码格式，兼容v2board后端
+      final urlEncodedBody = body.entries
+          .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value.toString())}')
+          .join('&');
+
       final response = await http
           .post(
             url,
             headers: requiresHeaders
-                ? (headers ?? {'Content-Type': 'application/json'})
+                ? (headers ?? {'Content-Type': 'application/x-www-form-urlencoded'})
                 : null,
-            body: json.encode(body),
+            body: urlEncodedBody,
           )
           .timeout(const Duration(seconds: 20)); // 设置超时时间
 
       if (kDebugMode) {
         print("POST $baseUrl$endpoint response: ${response.body}");
       }
+      
+      // 处理不同的响应状态码
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;
+      } else if (response.statusCode == 422) {
+        // 处理验证错误，提供更友好的错误信息
+        final errorBody = json.decode(response.body);
+        if (errorBody['errors'] != null) {
+          final errors = errorBody['errors'] as Map<String, dynamic>;
+          final errorMessages = errors.entries
+              .map((e) => '${e.key}: ${(e.value as List).join(', ')}')
+              .join('; ');
+          throw Exception('验证失败: $errorMessages');
+        } else {
+          throw Exception('验证失败: ${errorBody['message'] ?? '未知错误'}');
+        }
       } else {
         throw Exception(
             "POST request to $baseUrl$endpoint failed: ${response.statusCode}, ${response.body}");
