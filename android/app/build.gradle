@@ -116,17 +116,9 @@ android {
 
     buildTypes {
         release {
-            // 优先使用环境变量签名配置，如果没有则使用key.properties
-            if (System.getenv('ANDROID_KEY_ALIAS') != null && System.getenv('ANDROID_KEYSTORE_PATH') != null) {
-                println "Release build: Using environment variables signing config"
-                signingConfig signingConfigs.release
-            } else if (hasKeyStore) {
-                println "Release build: Using key.properties signing config"
-                signingConfig signingConfigs.release
-            } else {
-                println "Release build: Using debug signing config (no release signing available)"
-                signingConfig signingConfigs.debug
-            }
+            // 强制使用release签名配置
+            println "Release build: Setting signing config to release"
+            signingConfig signingConfigs.release
             ndk {
                 //noinspection ChromeOsAbiSupport
                 abiFilters "x86_64", "armeabi-v7a", "arm64-v8a"
