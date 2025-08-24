@@ -63,6 +63,8 @@ jobs:
           echo "Keystore file size: $(wc -c < ${{ github.workspace }}/android/app/hiddify-with-panels.keystore) bytes"
           echo "=== Testing keystore with keytool ==="
           keytool -list -v -keystore ${{ github.workspace }}/android/app/hiddify-with-panels.keystore -storepass hiddify123 -alias hiddify-with-panels || echo "Keytool verification failed"
+          echo "=== Testing with different alias ==="
+          keytool -list -v -keystore ${{ github.workspace }}/android/app/hiddify-with-panels.keystore -storepass hiddify123 || echo "Keytool list failed"
           echo "====================================="
           
       - name: Prepare for Android
