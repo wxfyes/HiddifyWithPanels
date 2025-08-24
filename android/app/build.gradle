@@ -87,9 +87,19 @@ android {
             if (System.getenv('ANDROID_KEY_ALIAS') != null && System.getenv('ANDROID_KEYSTORE_PATH') != null) {
                 // 使用环境变量（GitHub Actions）
                 println "Using environment variables for signing"
+                println "Setting keyAlias: ${System.getenv('ANDROID_KEY_ALIAS')}"
+                println "Setting keyPassword: ${System.getenv('ANDROID_KEY_PASSWORD')}"
+                println "Setting storeFile: ${System.getenv('ANDROID_KEYSTORE_PATH')}"
+                println "Setting storePassword: ${System.getenv('ANDROID_STORE_PASSWORD')}"
+                
+                def keystorePath = System.getenv('ANDROID_KEYSTORE_PATH')
+                def keystoreFile = file(keystorePath)
+                println "Keystore file exists: ${keystoreFile.exists()}"
+                println "Keystore file absolute path: ${keystoreFile.absolutePath}"
+                
                 keyAlias System.getenv('ANDROID_KEY_ALIAS')
                 keyPassword System.getenv('ANDROID_KEY_PASSWORD')
-                storeFile file(System.getenv('ANDROID_KEYSTORE_PATH'))
+                storeFile keystoreFile
                 storePassword System.getenv('ANDROID_STORE_PASSWORD')
             } else if (hasKeyStore) {
                 // 使用本地key.properties

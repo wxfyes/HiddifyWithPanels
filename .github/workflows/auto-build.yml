@@ -58,6 +58,12 @@ jobs:
       - name: Setup Android Signing
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
+          echo "=== Keystore Verification ==="
+          ls -la ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
+          echo "Keystore file size: $(wc -c < ${{ github.workspace }}/android/app/hiddify-with-panels.keystore) bytes"
+          echo "=== Testing keystore with keytool ==="
+          keytool -list -v -keystore ${{ github.workspace }}/android/app/hiddify-with-panels.keystore -storepass hiddify123 -alias hiddify-with-panels || echo "Keytool verification failed"
+          echo "====================================="
           
       - name: Prepare for Android
         run: |
