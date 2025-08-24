@@ -70,15 +70,6 @@ jobs:
           dart run build_runner build --delete-conflicting-outputs
           dart run slang
 
-      - name: Create key.properties
-        run: |
-        echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" > android/key.properties
-        echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
-        echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
-        echo "storeFile=${{ github.workspace }}/android/app/hiddify-with-panels.keystore" >> android/key.properties
-        cat android/key.properties
-        mv android/key.properties android/app/key.properties
-
       - name: Build APK
         env:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
