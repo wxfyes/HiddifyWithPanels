@@ -24,7 +24,7 @@ on:
 env:
   IS_GITHUB_ACTIONS: 1
   CHANNEL: "prod"
-  FLUTTER_VERSION: '3.22.2'
+  FLUTTER_VERSION: '3.24.0'
   TARGET_NAME_apk: "HiddifyWithPanels-Android"
   TARGET_NAME_exe: "HiddifyWithPanels-Windows-x64"
   TARGET_NAME_dmg: "HiddifyWithPanels-MacOS"
