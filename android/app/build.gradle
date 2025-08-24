@@ -75,18 +75,31 @@ android {
 
     signingConfigs {
         release {
-            if (System.getenv('ANDROID_KEY_ALIAS') != null) {
+            // 调试信息
+            println "=== Gradle Debug Info ==="
+            println "ANDROID_KEY_ALIAS: ${System.getenv('ANDROID_KEY_ALIAS')}"
+            println "ANDROID_KEY_PASSWORD: ${System.getenv('ANDROID_KEY_PASSWORD')}"
+            println "ANDROID_STORE_PASSWORD: ${System.getenv('ANDROID_STORE_PASSWORD')}"
+            println "ANDROID_KEYSTORE_PATH: ${System.getenv('ANDROID_KEYSTORE_PATH')}"
+            println "hasKeyStore: $hasKeyStore"
+            println "=========================="
+            
+            if (System.getenv('ANDROID_KEY_ALIAS') != null && System.getenv('ANDROID_KEYSTORE_PATH') != null) {
                 // 使用环境变量（GitHub Actions）
+                println "Using environment variables for signing"
                 keyAlias System.getenv('ANDROID_KEY_ALIAS')
                 keyPassword System.getenv('ANDROID_KEY_PASSWORD')
                 storeFile file(System.getenv('ANDROID_KEYSTORE_PATH'))
                 storePassword System.getenv('ANDROID_STORE_PASSWORD')
             } else if (hasKeyStore) {
                 // 使用本地key.properties
+                println "Using key.properties for signing"
                 keyAlias keystoreProperties['keyAlias']
                 keyPassword keystoreProperties['keyPassword']
                 storeFile file(keystoreProperties['storeFile'])
                 storePassword keystoreProperties['storePassword']
+            } else {
+                println "No signing configuration available"
             }
         }
     }
@@ -94,11 +107,14 @@ android {
     buildTypes {
         release {
             // 优先使用环境变量签名配置，如果没有则使用key.properties
-            if (System.getenv('ANDROID_KEY_ALIAS') != null) {
+            if (System.getenv('ANDROID_KEY_ALIAS') != null && System.getenv('ANDROID_KEYSTORE_PATH') != null) {
+                println "Release build: Using environment variables signing config"
                 signingConfig signingConfigs.release
             } else if (hasKeyStore) {
+                println "Release build: Using key.properties signing config"
                 signingConfig signingConfigs.release
             } else {
+                println "Release build: Using debug signing config (no release signing available)"
                 signingConfig signingConfigs.debug
             }
             ndk {
