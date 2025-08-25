@@ -30,7 +30,7 @@ class PurchaseDetailsViewModel extends ChangeNotifier {
   Future<List<dynamic>> handleSubscribe() async {
     final accessToken = await getToken();
     if (accessToken == null) {
-      print("Access token is null");
+      print("[purchase] Access token is null");
       return [];
     }
 
@@ -38,40 +38,40 @@ class PurchaseDetailsViewModel extends ChangeNotifier {
       // 检查未支付的订单
       final List<Order> orders =
           await _orderService.fetchUserOrders(accessToken);
+      print('[purchase] fetched orders: count=${orders.length}');
       for (final order in orders) {
-        print(order.status);
+        print('[purchase] order: tradeNo=${order.tradeNo} status=${order.status}');
         if (order.status == 0) {
           // 如果订单未支付
           await _orderService.cancelOrder(order.tradeNo!, accessToken);
-          print('未支付订单 ${order.tradeNo} 已取消');
+          print('[purchase] cancelled unpaid order ${order.tradeNo}');
         }
       }
-      print("准备创建");
+      print("[purchase] creating order with planId=$planId period=$selectedPeriod price=$selectedPrice");
       // 创建新订单
       final orderResponse = await _purchaseService.createOrder(
         planId,
         selectedPeriod!,
         accessToken,
       );
-      print("请求完毕");
+      print("[purchase] order save response: $orderResponse");
       if (orderResponse != null) {
         tradeNo = orderResponse['data']?.toString();
         if (kDebugMode) {
-          print("订单创建成功 订单号$tradeNo");
+          print("[purchase] order created, tradeNo=$tradeNo");
         }
         final paymentMethods =
             await _purchaseService.getPaymentMethods(accessToken, tradeNo: tradeNo);
+        print('[purchase] payment methods result length=${paymentMethods.length}');
         return paymentMethods;
       } else {
         if (kDebugMode) {
-          print('订单创建失败: ${orderResponse?['message']}');
+          print('[purchase] order create failed: ${orderResponse?['message']}');
         }
         return [];
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('错误: $e');
-      }
+      print('[purchase] error: $e');
       return [];
     }
   }

@@ -24,7 +24,9 @@ class PaymentService {
         {'Authorization': 'Bearer $accessToken'},
       ]) {
         try {
+          print('[payment] try no-trade payment methods: $path header=${header.keys.first}');
           final response = await _httpService.getRequest(path, headers: header);
+          print('[payment] response from $path: $response');
           if (response['data'] is List && (response['data'] as List).isNotEmpty) {
             return (response['data'] as List).cast<dynamic>();
           }
@@ -55,9 +57,9 @@ class PaymentService {
       ]) {
         try {
           final fullPath = tradeNo != null ? "$path?trade_no=$tradeNo" : path;
-          print("Trying payment methods API: $fullPath with header: ${header['Authorization']!.toString().substring(0, header['Authorization']!.toString().length > 12 ? 12 : header['Authorization']!.toString().length)}...");
+          print("[payment] trying methods: $fullPath header=${header.keys.first}");
           final response = await _httpService.getRequest(fullPath, headers: header);
-          print("Payment methods response from $path: $response");
+          print("[payment] response from $fullPath: $response");
           
           // 检查不同的响应格式
           if (response['data'] != null) {
