@@ -96,14 +96,14 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
       String label, double price, String period, PurchaseDetailsViewModel vm) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
-      child: RadioListTile<double>(
+      child: RadioListTile<String>(
         title: Text(
           '$label: ${price.toStringAsFixed(2)} ${widget.t.purchase.rmb}',
         ),
-        value: price,
-        groupValue: vm.selectedPrice,
-        onChanged: (double? value) {
-          vm.setSelectedPrice(value, period);
+        value: period,
+        groupValue: vm.selectedPeriod,
+        onChanged: (String? selected) {
+          vm.setSelectedPrice(price, selected);
         },
       ),
     );
