@@ -83,34 +83,7 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
       } catch (_) {}
     }
 
-    final webView = InAppWebView(
-      initialSettings: initialSettings,
-      initialUrlRequest: URLRequest(url: WebUri(_targetUrl!)),
-      onWebViewCreated: (c) async {
-        _controller = c;
-      },
-      onLoadStart: (c, url) async {
-        if (token != null) {
-          await c.evaluateJavascript(source: "try{localStorage.setItem('token','${token.replaceAll("'", "\\'")}');}catch(e){}");
-        }
-      },
-      onReceivedServerTrustAuthRequest: (c, challenge) async {
-        final host = challenge.protectionSpace.host;
-        final port = challenge.protectionSpace.port ?? 443;
-        final hostPort = "$host:$port";
-        if (DomainService.allowSelfSigned && DomainService.paymentHosts.contains(hostPort)) {
-          return ServerTrustAuthResponse(action: ServerTrustAuthResponseAction.PROCEED);
-        }
-        return ServerTrustAuthResponse(action: ServerTrustAuthResponseAction.CANCEL);
-      },
-      onReceivedError: (c, request, error) async {
-        await _openExternal();
-      },
-      onReceivedHttpError: (c, request, error) async {
-        if ((error.statusCode ?? 0) >= 400) await _openExternal();
-      },
-    );
-
+    // 不使用变量 webView，直接由 build 返回 Widget
     if (!mounted) return;
     setState(() {});
   }
@@ -126,7 +99,7 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
               ? const SizedBox.shrink()
               : InAppWebView(
                   initialUrlRequest: URLRequest(url: WebUri(_targetUrl!)),
-                  initialSettings: const InAppWebViewSettings(
+                  initialSettings: InAppWebViewSettings(
                     javaScriptEnabled: true,
                     transparentBackground: true,
                   ),
