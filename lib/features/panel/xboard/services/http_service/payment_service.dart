@@ -14,7 +14,27 @@ class PaymentService {
   }
 
   Future<List<dynamic>> getPaymentMethods(String accessToken, {String? tradeNo}) async {
-    // 尝试多个可能的API路径
+    // 先按 EZ-Theme 逻辑：不带 trade_no 直接获取一次
+    for (final path in [
+      "/api/v1/user/order/getPaymentMethod",
+      "/api/v1/user/payment/getPaymentMethod",
+    ]) {
+      for (final header in [
+        {'Authorization': accessToken},
+        {'Authorization': 'Bearer $accessToken'},
+      ]) {
+        try {
+          final response = await _httpService.getRequest(path, headers: header);
+          if (response['data'] is List && (response['data'] as List).isNotEmpty) {
+            return (response['data'] as List).cast<dynamic>();
+          }
+        } catch (_) {
+          // ignore and continue
+        }
+      }
+    }
+
+    // 再尝试多条可能需要 trade_no 的兼容 API 路径
     final possiblePaths = [
       "/api/v1/user/order/getPaymentMethod",
       "/api/v1/user/order/getPaymentMethods",

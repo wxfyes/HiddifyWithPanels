@@ -15,4 +15,20 @@ class BalanceService {
     );
     return true;
   }
+
+  // 充值：按 EZ-Theme 逻辑创建充值订单
+  Future<Map<String, dynamic>> createDepositOrder(
+    String accessToken,
+    int amountInCents,
+  ) async {
+    return await _httpService.postRequest(
+      '/api/v1/user/order/save',
+      {
+        'period': 'deposit',
+        'deposit_amount': amountInCents,
+        'plan_id': 0,
+      },
+      headers: {'Authorization': accessToken},
+    );
+  }
 }
