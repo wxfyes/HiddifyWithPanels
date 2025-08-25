@@ -49,12 +49,11 @@ Future<void> lazyBootstrap(
       environmentProvider.overrideWithValue(env),
     ],
   );
-// 初始化域名
+  // 初始化域名 + 远程支付配置
   try {
     container.read(authProvider.notifier).state = false;
-    // print("Initializing domain...");
-    // await HttpService.initialize();
-    // print("Domain initialized successfully: ${HttpService.baseUrl}");
+    await HttpService.initialize();
+    Logger.bootstrap.info("domain initialized: ${HttpService.baseUrl}");
   } catch (e) {
     // 如果初始化域名出错，设置为未登录状态
     print("Error during domain initialization: $e");
@@ -62,7 +61,7 @@ Future<void> lazyBootstrap(
     return;
   }
 
-// 尝试读取 token 并设置登录状态
+  // 尝试读取 token 并设置登录状态
   try {
     final token = await getToken(); // 从 SharedPreferences 中获取 token
     print("Retrieved token: $token");
