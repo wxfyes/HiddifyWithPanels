@@ -57,14 +57,30 @@ jobs:
           
       - name: Setup Android Signing
         run: |
+          echo "=== Decoding keystore ==="
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
-          echo "=== Keystore Verification ==="
+          
+          echo "=== Keystore File Info ==="
           ls -la ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
           echo "Keystore file size: $(wc -c < ${{ github.workspace }}/android/app/hiddify-with-panels.keystore) bytes"
+          
+          echo "=== Verifying keystore integrity ==="
+          file ${{ github.workspace }}/android/app/hiddify-with-panels.keystore
+          
           echo "=== Testing keystore with keytool ==="
-          keytool -list -v -keystore ${{ github.workspace }}/android/app/hiddify-with-panels.keystore -storepass hiddify123 -alias hiddify-with-panels || echo "Keytool verification failed"
-          echo "=== Testing with different alias ==="
-          keytool -list -v -keystore ${{ github.workspace }}/android/app/hiddify-with-panels.keystore -storepass hiddify123 || echo "Keytool list failed"
+          if keytool -list -v -keystore ${{ github.workspace }}/android/app/hiddify-with-panels.keystore -storepass hiddify123 -alias hiddify-with-panels; then
+            echo "✅ Keystore verification successful with alias"
+          else
+            echo "❌ Keystore verification failed with alias"
+            echo "=== Trying without alias ==="
+            if keytool -list -v -keystore ${{ github.workspace }}/android/app/hiddify-with-panels.keystore -storepass hiddify123; then
+              echo "✅ Keystore verification successful without alias"
+            else
+              echo "❌ Keystore verification completely failed"
+              echo "=== Checking keystore content ==="
+              hexdump -C ${{ github.workspace }}/android/app/hiddify-with-panels.keystore | head -20
+            fi
+          fi
           echo "====================================="
           
       - name: Prepare for Android

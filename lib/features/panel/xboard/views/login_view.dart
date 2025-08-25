@@ -127,29 +127,53 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       else
                         ElevatedButton(
                           onPressed: domainCheckViewModel.isSuccess
-                              ? () async {
-                                  final email =
-                                      loginViewModel.usernameController.text;
-                                  final password =
-                                      loginViewModel.passwordController.text;
-                                  try {
-                                    await loginViewModel.login(
-                                      email,
-                                      password,
-                                      context,
-                                      ref,
-                                    );
-                                    if (context.mounted) {
-                                      context.go('/');
+                                                              ? () async {
+                                    final email =
+                                        loginViewModel.usernameController.text.trim();
+                                    final password =
+                                        loginViewModel.passwordController.text.trim();
+                                    
+                                    // 添加前端验证
+                                    if (email.isEmpty) {
+                                      _showErrorSnackbar(
+                                        context,
+                                        "请输入邮箱地址",
+                                        Colors.red,
+                                      );
+                                      return;
                                     }
-                                  } catch (e) {
-                                    _showErrorSnackbar(
-                                      context,
-                                      "${t.login.loginErr}: $e",
-                                      Colors.red,
-                                    );
+                                    
+                                    if (password.isEmpty) {
+                                      _showErrorSnackbar(
+                                        context,
+                                        "请输入密码",
+                                        Colors.red,
+                                      );
+                                      return;
+                                    }
+                                    
+                                    if (kDebugMode) {
+                                      print("Login attempt - Email: $email, Password: ${password.isNotEmpty ? '***' : 'empty'}");
+                                    }
+                                    
+                                    try {
+                                      await loginViewModel.login(
+                                        email,
+                                        password,
+                                        context,
+                                        ref,
+                                      );
+                                      if (context.mounted) {
+                                        context.go('/');
+                                      }
+                                    } catch (e) {
+                                      _showErrorSnackbar(
+                                        context,
+                                        "${t.login.loginErr}: $e",
+                                        Colors.red,
+                                      );
+                                    }
                                   }
-                                }
                               : null, // 禁用按钮，直到连通性检查通过
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,

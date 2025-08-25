@@ -56,10 +56,24 @@ class HttpService {
     final url = Uri.parse('$baseUrl$endpoint');
 
     try {
+      // 检查数据是否为空
+      if (body.isEmpty) {
+        throw Exception('请求数据不能为空');
+      }
+      
+      // 打印请求数据用于调试
+      if (kDebugMode) {
+        print("POST $baseUrl$endpoint request body: $body");
+      }
+      
       // 将JSON数据转换为URL编码格式，兼容v2board后端
       final urlEncodedBody = body.entries
           .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value.toString())}')
           .join('&');
+
+      if (kDebugMode) {
+        print("POST $baseUrl$endpoint encoded body: $urlEncodedBody");
+      }
 
       final response = await http
           .post(
