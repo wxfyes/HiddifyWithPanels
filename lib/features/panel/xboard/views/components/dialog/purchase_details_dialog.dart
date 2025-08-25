@@ -12,6 +12,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:hiddify/features/panel/xboard/services/http_service/http_service.dart';
 import 'package:hiddify/features/panel/xboard/views/payment_webview_page.dart';
+import 'package:hiddify/features/panel/xboard/services/http_service/domain_service.dart';
+import 'package:hiddify/features/panel/xboard/utils/storage/token_storage.dart';
 
 void showPurchaseDialog(
     BuildContext context, Plan plan, Translations t, WidgetRef ref) {
@@ -214,8 +216,15 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: () async {
-                  if (viewModel.selectedPrice != null &&
-                      viewModel.selectedPeriod != null) {
+                  // 兜底：若出现价格已选但周期丢失的情况，按价格反推周期
+                  if (viewModel.selectedPeriod == null && viewModel.selectedPrice != null) {
+                    final inferred = _findCheapestPeriod(viewModel.selectedPrice);
+                    if (inferred != null) {
+                      viewModel.setSelectedPrice(viewModel.selectedPrice, inferred);
+                    }
+                  }
+
+                  if (viewModel.selectedPrice != null && viewModel.selectedPeriod != null) {
                     final paymentMethods = await viewModel.handleSubscribe();
                     final tradeNo = viewModel.tradeNo;
                     if (tradeNo == null) {
@@ -240,13 +249,15 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
                         },
                       );
                     } else {
-                      // 兜底：应用内WebView拉起支付页 / 或系统浏览器
-                      if (!context.mounted) return;
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => PaymentWebViewPage(tradeNo: tradeNo),
-                        ),
-                      );
+                      // 兜底：改为携带 token 直接外部浏览器拉起
+                      final token = await getToken();
+                      final base = HttpService.baseUrl;
+                      final path = DomainService.cashierPath; // '/#/payment?trade_no='
+                      final extra = token != null
+                          ? '&auth_data=${Uri.encodeComponent(token)}&token=${Uri.encodeComponent(token)}&access_token=${Uri.encodeComponent(token)}'
+                          : '';
+                      final uri = Uri.parse('$base$path$tradeNo$extra');
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(

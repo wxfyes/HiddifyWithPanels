@@ -10,7 +10,7 @@ class DomainService {
   static const String v2boardDomain = 'https://your-v2board-panel.com';
 
   static List<String> paymentHosts = <String>[];
-  static String cashierPath = "/#/payment?from=orders";
+  static String cashierPath = "/#/payment?trade_no=";
   static bool allowSelfSigned = false;
 
   static Future<String> fetchValidDomain() async {

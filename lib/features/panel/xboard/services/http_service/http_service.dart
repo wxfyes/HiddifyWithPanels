@@ -30,8 +30,12 @@ class HttpService {
       if (kDebugMode) {
         print("GET $baseUrl$endpoint response: ${response.body}");
       }
-      if (response.statusCode == 200) {
-        return json.decode(response.body) as Map<String, dynamic>;
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final map = json.decode(response.body) as Map<String, dynamic>;
+        // 统一补充状态字段，便于上层判断
+        map.putIfAbsent('status', () => 'success');
+        map['statusCode'] = response.statusCode;
+        return map;
       } else {
         throw Exception(
             "GET request to $baseUrl$endpoint failed: ${response.statusCode}, ${response.body}");
@@ -99,8 +103,11 @@ class HttpService {
         print("POST $baseUrl$endpoint response: ${response.body}");
       }
 
-      if (response.statusCode == 200) {
-        return json.decode(response.body) as Map<String, dynamic>;
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final map = json.decode(response.body) as Map<String, dynamic>;
+        map.putIfAbsent('status', () => 'success');
+        map['statusCode'] = response.statusCode;
+        return map;
       } else if (response.statusCode == 422) {
         final errorBody = json.decode(response.body);
         if (errorBody['errors'] != null) {
@@ -143,8 +150,11 @@ class HttpService {
         print(
             "POST $baseUrl$endpoint without headers response: ${response.body}");
       }
-      if (response.statusCode == 200) {
-        return json.decode(response.body) as Map<String, dynamic>;
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final map = json.decode(response.body) as Map<String, dynamic>;
+        map.putIfAbsent('status', () => 'success');
+        map['statusCode'] = response.statusCode;
+        return map;
       } else {
         throw Exception(
             "POST request to $baseUrl$endpoint failed: ${response.statusCode}, ${response.body}");

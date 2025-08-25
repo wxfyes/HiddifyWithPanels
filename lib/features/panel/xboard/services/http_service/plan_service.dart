@@ -7,10 +7,18 @@ class PlanService {
   final HttpService _httpService = HttpService();
 
   Future<List<Plan>> fetchPlanData(String accessToken) async {
-    final result = await _httpService.getRequest(
-      "/api/v1/user/plan/fetch",
-      headers: {'Authorization': accessToken},
-    );
+    Map<String, dynamic> result;
+    try {
+      result = await _httpService.getRequest(
+        "/api/v1/user/plan/fetch",
+        headers: {'Authorization': accessToken},
+      );
+    } catch (_) {
+      result = await _httpService.getRequest(
+        "/api/v1/user/plan/fetch",
+        headers: {'Authorization': 'Bearer $accessToken'},
+      );
+    }
     return (result["data"] as List)
         .cast<Map<String, dynamic>>()
         .map((json) => Plan.fromJson(json))

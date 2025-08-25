@@ -15,26 +15,39 @@ class AuthService {
 
   Future<Map<String, dynamic>> register(String email, String password,
       String inviteCode, String emailCode) async {
+    final Map<String, dynamic> body = {
+      "email": email,
+      "password": password,
+      "email_code": emailCode,
+    };
+    if (inviteCode.trim().isNotEmpty) {
+      body["invite_code"] = inviteCode.trim();
+    }
     return await _httpService.postRequest(
       "/api/v1/passport/auth/register",
-      {
-        "email": email,
-        "password": password,
-        "invite_code": inviteCode,
-        "email_code": emailCode,
-      },
+      body,
       requiresHeaders: true,
-      sendAsJson: true,
+      sendAsJson: false, // v2board 兼容：使用表单
     );
   }
 
   Future<Map<String, dynamic>> sendVerificationCode(String email) async {
-    return await _httpService.postRequest(
-      "/api/v1/passport/comm/sendEmailVerify",
-      {"email": email, "scene": "register"},
-      requiresHeaders: true,
-      sendAsJson: true,
-    );
+    // 兼容 xiao-v2board：多数后端接受表单 & guest 前缀
+    try {
+      return await _httpService.postRequest(
+        "/api/v1/guest/comm/sendEmailVerify",
+        {"email": email, "scene": "register"},
+        requiresHeaders: true,
+        sendAsJson: false,
+      );
+    } catch (_) {
+      return await _httpService.postRequest(
+        "/api/v1/passport/comm/sendEmailVerify",
+        {"email": email, "scene": "register"},
+        requiresHeaders: true,
+        sendAsJson: false,
+      );
+    }
   }
 
   Future<Map<String, dynamic>> resetPassword(
