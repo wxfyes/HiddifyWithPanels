@@ -9,6 +9,7 @@ class AuthService {
       "/api/v1/passport/auth/login",
       {"email": email, "password": password},
       requiresHeaders: true,
+      sendAsJson: false, // 登录保持 x-www-form-urlencoded
     );
   }
 
@@ -23,6 +24,7 @@ class AuthService {
         "email_code": emailCode,
       },
       requiresHeaders: true,
+      sendAsJson: true,
     );
   }
 
@@ -31,6 +33,7 @@ class AuthService {
       "/api/v1/passport/comm/sendEmailVerify",
       {"email": email, "scene": "register"},
       requiresHeaders: true,
+      sendAsJson: true,
     );
   }
 
@@ -44,6 +47,7 @@ class AuthService {
         "email_code": emailCode,
       },
       requiresHeaders: true,
+      sendAsJson: true,
     );
   }
 }

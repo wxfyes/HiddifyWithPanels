@@ -46,54 +46,62 @@ class HttpService {
 
   // 统一的 POST 请求方法
 
-  // 统一的 POST 请求方法，增加 requiresHeaders 开关
+  // 统一的 POST 请求方法，支持 urlencoded 或 JSON
   Future<Map<String, dynamic>> postRequest(
     String endpoint,
     Map<String, dynamic> body, {
     Map<String, String>? headers,
-    bool requiresHeaders = true, // 新增开关参数，默认需要 headers
+    bool requiresHeaders = true, // 是否添加内容类型头
+    bool sendAsJson = false, // true 时按 JSON 发送
   }) async {
     final url = Uri.parse('$baseUrl$endpoint');
 
     try {
-      // 检查数据是否为空
       if (body.isEmpty) {
         throw Exception('请求数据不能为空');
       }
-      
-      // 打印请求数据用于调试
-      if (kDebugMode) {
-        print("POST $baseUrl$endpoint request body: $body");
-      }
-      
-      // 将JSON数据转换为URL编码格式，兼容v2board后端
-      final urlEncodedBody = body.entries
-          .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value.toString())}')
-          .join('&');
 
       if (kDebugMode) {
-        print("POST $baseUrl$endpoint encoded body: $urlEncodedBody");
+        print("POST $baseUrl$endpoint request body: $body (json=$sendAsJson)");
       }
 
-      final response = await http
-          .post(
-            url,
-            headers: requiresHeaders
-                ? (headers ?? {'Content-Type': 'application/x-www-form-urlencoded'})
-                : null,
-            body: urlEncodedBody,
-          )
-          .timeout(const Duration(seconds: 20)); // 设置超时时间
+      late http.Response response;
+      if (sendAsJson) {
+        response = await http
+            .post(
+              url,
+              headers:
+                  requiresHeaders ? (headers ?? {'Content-Type': 'application/json'}) : null,
+              body: json.encode(body),
+            )
+            .timeout(const Duration(seconds: 20));
+      } else {
+        final urlEncodedBody = body.entries
+            .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value.toString())}')
+            .join('&');
+
+        if (kDebugMode) {
+          print("POST $baseUrl$endpoint encoded body: $urlEncodedBody");
+        }
+
+        response = await http
+            .post(
+              url,
+              headers: requiresHeaders
+                  ? (headers ?? {'Content-Type': 'application/x-www-form-urlencoded'})
+                  : null,
+              body: urlEncodedBody,
+            )
+            .timeout(const Duration(seconds: 20));
+      }
 
       if (kDebugMode) {
         print("POST $baseUrl$endpoint response: ${response.body}");
       }
-      
-      // 处理不同的响应状态码
+
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;
       } else if (response.statusCode == 422) {
-        // 处理验证错误，提供更友好的错误信息
         final errorBody = json.decode(response.body);
         if (errorBody['errors'] != null) {
           final errors = errorBody['errors'] as Map<String, dynamic>;
@@ -116,7 +124,7 @@ class HttpService {
     }
   }
 
-  // POST 请求方法，不包含 headers
+  // POST 请求方法，不包含 headers（保留）
   Future<Map<String, dynamic>> postRequestWithoutHeaders(
     String endpoint,
     Map<String, dynamic> body,
