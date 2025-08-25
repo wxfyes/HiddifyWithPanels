@@ -15,6 +15,7 @@ import 'package:hiddify/features/proxy/active/active_proxy_footer.dart';
 import 'package:hiddify/utils/placeholders.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sliver_tools/sliver_tools.dart';
+import 'package:hiddify/features/common/glass_container.dart';
 
 class HomePage extends HookConsumerWidget {
   const HomePage({super.key});
@@ -29,6 +30,7 @@ class HomePage extends HookConsumerWidget {
       body: Stack(
         alignment: Alignment.bottomCenter,
         children: [
+          const GlassBackground(),
           CustomScrollView(
             slivers: [
               NestedAppBar(
@@ -45,7 +47,6 @@ class HomePage extends HookConsumerWidget {
                   ),
                 ),
                 actions: [
-                  // 仅保留快速设置按钮，移除添加配置文件的按钮
                   IconButton(
                     onPressed: () => const QuickSettingsRoute().push(context),
                     icon: const Icon(FluentIcons.options_24_filled),
@@ -54,61 +55,74 @@ class HomePage extends HookConsumerWidget {
                 ],
               ),
               switch (activeProfile) {
-                // 如果有活跃的配置文件，显示相应的内容
                 AsyncData(value: final profile?) => MultiSliver(
                     children: [
-                      ProfileTile(profile: profile, isMain: true),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: GlassContainer(
+                          child: ProfileTile(profile: profile, isMain: true),
+                        ),
+                      ),
                       SliverFillRemaining(
                         hasScrollBody: false,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  ConnectionButton(),
-                                  ActiveProxyDelayIndicator(),
-                                ],
+                            Expanded(
+                              child: Center(
+                                child: SizedBox(
+                                  width: 420,
+                                  child: GlassContainer(
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                                    child: const Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ConnectionButton(),
+                                        SizedBox(height: 8),
+                                        ActiveProxyDelayIndicator(),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                             if (MediaQuery.sizeOf(context).width < 840)
-                              const ActiveProxyFooter(),
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: GlassContainer(child: const ActiveProxyFooter()),
+                              ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                // 修改无活跃配置文件时的提示信息
                 AsyncData() => switch (hasAnyProfile) {
-                    AsyncData(value: true) =>
-                      const EmptyActiveProfileHomeBody(),
+                    AsyncData(value: true) => const EmptyActiveProfileHomeBody(),
                     _ => SliverFillRemaining(
                         hasScrollBody: false,
                         child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(t.home.noSubscriptionMsg,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context).textTheme.bodyLarge,
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: () {
-                                  // 导航到套餐购买页面
-                                  const PurchaseRoute().push(context);
-                                },
-                                child: Text(t.home.goToPurchasePage),
-                              ),
-                            ],
+                          child: GlassContainer(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  t.home.noSubscriptionMsg,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () => const PurchaseRoute().push(context),
+                                  child: Text(t.home.goToPurchasePage),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                   },
-                AsyncError(:final error) =>
-                  SliverErrorBodyPlaceholder(t.presentShortError(error)),
+                AsyncError(:final error) => SliverErrorBodyPlaceholder(t.presentShortError(error)),
                 _ => const SliverToBoxAdapter(),
               },
             ],

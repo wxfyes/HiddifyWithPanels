@@ -11,6 +11,7 @@ import 'package:hiddify/features/panel/xboard/views/components/dialog/payment_me
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:hiddify/features/panel/xboard/services/http_service/http_service.dart';
+import 'package:hiddify/features/panel/xboard/views/payment_webview_page.dart';
 
 void showPurchaseDialog(
     BuildContext context, Plan plan, Translations t, WidgetRef ref) {
@@ -230,16 +231,13 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
                         },
                       );
                     } else {
-                      // 兜底：直接跳转统一收银台
-                      final base = HttpService.baseUrl;
-                      final url = Uri.parse('$base/#/payment?trade_no=${viewModel.tradeNo}');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(t.payments.noPayments)),
-                        );
-                      }
+                      // 兜底：应用内WebView拉起支付页
+                      if (!context.mounted) return;
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PaymentWebViewPage(tradeNo: viewModel.tradeNo!),
+                        ),
+                      );
                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(

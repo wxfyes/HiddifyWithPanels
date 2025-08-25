@@ -1,5 +1,5 @@
 abstract class Constants {
-  static const appName = "Hiddify";
+  static const appName = "天阙";
   static const githubUrl = "https://www.tianque.cc";
   static const githubReleasesApiUrl =
       "https://api.github.com/repos/hiddify/hiddify-next/releases";

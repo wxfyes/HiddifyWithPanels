@@ -13,7 +13,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   cupertino_icons: ^1.0.6
-  intl: ^0.19.0
+  intl: ^0.20.2
   # humanizer: ^2.2.0
   # intl: ^0.19.0
   humanizer:
@@ -98,6 +98,7 @@ dependencies:
   grpc: ^3.2.4
   dynamic_color: ^1.7.0
   flutter_typeahead: ^5.0.1
+  webview_flutter: ^4.8.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -117,6 +118,8 @@ dev_dependencies:
 dependency_overrides:
   # drift & package_info_plus are not compatible
   web: ^1.0.0
+  # Force intl version to resolve conflicts
+  intl: ^0.20.2
 
 flutter:
   uses-material-design: true
