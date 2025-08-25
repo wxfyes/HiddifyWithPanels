@@ -96,28 +96,37 @@ android {
             println "hasEnvVars: $hasEnvVars"
             println "=========================="
             
-            // 强制设置签名配置，不使用条件判断
-            println "Force setting signing configuration"
-            
-            def keystorePath = System.getenv('ANDROID_KEYSTORE_PATH')
-            def keystoreFile = file(keystorePath)
-            println "Keystore file exists: ${keystoreFile.exists()}"
-            println "Keystore file absolute path: ${keystoreFile.absolutePath}"
-            
-            keyAlias System.getenv('ANDROID_KEY_ALIAS')
-            keyPassword System.getenv('ANDROID_KEY_PASSWORD')
-            storeFile keystoreFile
-            storePassword System.getenv('ANDROID_STORE_PASSWORD')
-            
-            println "Signing configuration set successfully"
+            // 只有在环境变量存在时才设置签名配置
+            if (System.getenv('ANDROID_KEY_ALIAS') != null && System.getenv('ANDROID_KEYSTORE_PATH') != null) {
+                println "Setting signing configuration from environment variables"
+                
+                def keystorePath = System.getenv('ANDROID_KEYSTORE_PATH')
+                def keystoreFile = file(keystorePath)
+                println "Keystore file exists: ${keystoreFile.exists()}"
+                println "Keystore file absolute path: ${keystoreFile.absolutePath}"
+                
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+                storeFile keystoreFile
+                storePassword System.getenv('ANDROID_STORE_PASSWORD')
+                
+                println "Signing configuration set successfully"
+            } else {
+                println "No environment variables for signing, skipping signing configuration"
+            }
         }
     }
 
     buildTypes {
         release {
-            // 强制使用release签名配置
-            println "Release build: Setting signing config to release"
-            signingConfig signingConfigs.release
+            // 只有在签名配置存在时才使用
+            if (System.getenv('ANDROID_KEY_ALIAS') != null && System.getenv('ANDROID_KEYSTORE_PATH') != null) {
+                println "Release build: Using release signing config"
+                signingConfig signingConfigs.release
+            } else {
+                println "Release build: No signing config available, using debug signing"
+                signingConfig signingConfigs.debug
+            }
             ndk {
                 //noinspection ChromeOsAbiSupport
                 abiFilters "x86_64", "armeabi-v7a", "arm64-v8a"
