@@ -22,13 +22,15 @@ class AuthService {
         "invite_code": inviteCode,
         "email_code": emailCode,
       },
+      requiresHeaders: true,
     );
   }
 
   Future<Map<String, dynamic>> sendVerificationCode(String email) async {
     return await _httpService.postRequest(
       "/api/v1/passport/comm/sendEmailVerify",
-      {'email': email},
+      {"email": email, "scene": "register"},
+      requiresHeaders: true,
     );
   }
 
@@ -41,6 +43,7 @@ class AuthService {
         "password": password,
         "email_code": emailCode,
       },
+      requiresHeaders: true,
     );
   }
 }

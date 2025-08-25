@@ -13,8 +13,8 @@ class GlassContainer extends StatelessWidget {
   const GlassContainer({
     super.key,
     required this.child,
-    this.blur = 20,
-    this.opacity = 0.18,
+    this.blur = 22,
+    this.opacity = 0.22,
     this.borderRadius = const BorderRadius.all(Radius.circular(16)),
     this.padding = const EdgeInsets.all(16),
     this.margin,
@@ -22,28 +22,27 @@ class GlassContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
       margin: margin,
       decoration: BoxDecoration(
         borderRadius: borderRadius,
         border: Border.all(
-          color: theme.colorScheme.onSurface.withOpacity(0.08),
+          color: const Color(0x66FFFFFF),
           width: 1,
         ),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
-            theme.colorScheme.surface.withOpacity(opacity + 0.06),
-            theme.colorScheme.surface.withOpacity(opacity),
+            Color(0x33FFFFFF),
+            Color(0x22FFFFFF),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: theme.colorScheme.onSurface.withOpacity(0.08),
+            color: Color(0x22000000),
             blurRadius: 24,
-            offset: const Offset(0, 12),
+            offset: Offset(0, 12),
           ),
         ],
       ),
@@ -63,18 +62,17 @@ class GlassBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            theme.colorScheme.primary.withOpacity(0.08),
-            theme.colorScheme.secondary.withOpacity(0.06),
-            theme.colorScheme.surface,
+            Color(0xFFEAE6FF), // 淡紫
+            Color(0xFFE6F0FF), // 淡蓝
+            Color(0xFFFFFFFF), // 白
           ],
-          stops: const [0.0, 0.35, 1.0],
+          stops: [0.0, 0.45, 1.0],
         ),
       ),
     );
