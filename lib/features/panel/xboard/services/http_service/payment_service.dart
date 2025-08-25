@@ -13,7 +13,7 @@ class PaymentService {
     );
   }
 
-  Future<List<dynamic>> getPaymentMethods(String accessToken) async {
+  Future<List<dynamic>> getPaymentMethods(String accessToken, {String? tradeNo}) async {
     // 尝试多个可能的API路径
     final possiblePaths = [
       "/api/v1/user/order/getPaymentMethod",
@@ -34,11 +34,9 @@ class PaymentService {
         {'Authorization': 'Bearer $accessToken'},
       ]) {
         try {
-          print("Trying payment methods API: $path with header: ${header['Authorization']!.toString().substring(0, header['Authorization']!.toString().length > 12 ? 12 : header['Authorization']!.toString().length)}...");
-          final response = await _httpService.getRequest(
-            path,
-            headers: header,
-          );
+          final fullPath = tradeNo != null ? "$path?trade_no=$tradeNo" : path;
+          print("Trying payment methods API: $fullPath with header: ${header['Authorization']!.toString().substring(0, header['Authorization']!.toString().length > 12 ? 12 : header['Authorization']!.toString().length)}...");
+          final response = await _httpService.getRequest(fullPath, headers: header);
           print("Payment methods response from $path: $response");
           
           // 检查不同的响应格式

@@ -19,16 +19,28 @@ class AuthService {
       "email": email,
       "password": password,
       "email_code": emailCode,
+      "code": emailCode, // 兼容后端将邮箱验证码字段命名为 code 的情况
     };
     if (inviteCode.trim().isNotEmpty) {
       body["invite_code"] = inviteCode.trim();
     }
-    return await _httpService.postRequest(
-      "/api/v1/passport/auth/register",
-      body,
-      requiresHeaders: true,
-      sendAsJson: false, // v2board 兼容：使用表单
-    );
+
+    // 优先尝试 JSON，失败后退回 x-www-form-urlencoded
+    try {
+      return await _httpService.postRequest(
+        "/api/v1/passport/auth/register",
+        body,
+        requiresHeaders: true,
+        sendAsJson: true,
+      );
+    } catch (_) {
+      return await _httpService.postRequest(
+        "/api/v1/passport/auth/register",
+        body,
+        requiresHeaders: true,
+        sendAsJson: false,
+      );
+    }
   }
 
   Future<Map<String, dynamic>> sendVerificationCode(String email) async {

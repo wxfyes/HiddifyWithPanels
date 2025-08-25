@@ -60,7 +60,7 @@ class PurchaseDetailsViewModel extends ChangeNotifier {
           print("订单创建成功 订单号$tradeNo");
         }
         final paymentMethods =
-            await _purchaseService.getPaymentMethods(accessToken);
+            await _purchaseService.getPaymentMethods(accessToken, tradeNo: tradeNo);
         return paymentMethods;
       } else {
         if (kDebugMode) {

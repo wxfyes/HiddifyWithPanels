@@ -37,8 +37,8 @@ class PurchaseService {
     return await _orderService.createOrder(accessToken, planId, period);
   }
 
-  Future<List<dynamic>> getPaymentMethods(String accessToken) async {
-    return await _paymentService.getPaymentMethods(accessToken);
+  Future<List<dynamic>> getPaymentMethods(String accessToken, {String? tradeNo}) async {
+    return await _paymentService.getPaymentMethods(accessToken, tradeNo: tradeNo);
   }
 
   Future<Map<String, dynamic>> submitOrder(
