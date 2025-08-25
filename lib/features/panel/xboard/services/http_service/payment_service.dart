@@ -14,10 +14,34 @@ class PaymentService {
   }
 
   Future<List<dynamic>> getPaymentMethods(String accessToken) async {
-    final response = await _httpService.getRequest(
+    // 尝试多个可能的API路径
+    final possiblePaths = [
       "/api/v1/user/order/getPaymentMethod",
-      headers: {'Authorization': accessToken},
-    );
-    return (response['data'] as List).cast<dynamic>();
+      "/api/v1/user/order/getPaymentMethods",
+      "/api/v1/user/payment/getPaymentMethod",
+      "/api/v1/user/payment/getPaymentMethods",
+    ];
+
+    for (final path in possiblePaths) {
+      try {
+        print("Trying payment methods API: $path");
+        final response = await _httpService.getRequest(
+          path,
+          headers: {'Authorization': accessToken},
+        );
+        print("Payment methods response from $path: $response");
+        if (response['data'] != null) {
+          return (response['data'] as List).cast<dynamic>();
+        } else {
+          print("No data field in payment methods response from $path");
+        }
+      } catch (e) {
+        print("Error getting payment methods from $path: $e");
+        continue;
+      }
+    }
+    
+    print("All payment methods API paths failed");
+    return [];
   }
 }
