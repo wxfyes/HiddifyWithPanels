@@ -55,7 +55,9 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
       final viewModel = ref.read(_provider);
       final cheapestPrice = _findCheapestPrice();
       final cheapestPeriod = _findCheapestPeriod(cheapestPrice);
-      viewModel.setSelectedPrice(cheapestPrice, cheapestPeriod);
+      if (cheapestPrice != null && cheapestPeriod != null) {
+        viewModel.setSelectedPrice(cheapestPrice, cheapestPeriod);
+      }
     });
   }
 
@@ -77,13 +79,14 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
   }
 
   String? _findCheapestPeriod(double? cheapestPrice) {
-    if (cheapestPrice == widget.plan.monthPrice) return 'month_price';
-    if (cheapestPrice == widget.plan.quarterPrice) return 'quarter_price';
-    if (cheapestPrice == widget.plan.halfYearPrice) return 'half_year_price';
-    if (cheapestPrice == widget.plan.yearPrice) return 'year_price';
-    if (cheapestPrice == widget.plan.twoYearPrice) return 'two_year_price';
-    if (cheapestPrice == widget.plan.threeYearPrice) return 'three_year_price';
-    if (cheapestPrice == widget.plan.onetimePrice) return 'onetime_price';
+    if (cheapestPrice == null) return null;
+    if (widget.plan.monthPrice != null && cheapestPrice == widget.plan.monthPrice) return 'month_price';
+    if (widget.plan.quarterPrice != null && cheapestPrice == widget.plan.quarterPrice) return 'quarter_price';
+    if (widget.plan.halfYearPrice != null && cheapestPrice == widget.plan.halfYearPrice) return 'half_year_price';
+    if (widget.plan.yearPrice != null && cheapestPrice == widget.plan.yearPrice) return 'year_price';
+    if (widget.plan.twoYearPrice != null && cheapestPrice == widget.plan.twoYearPrice) return 'two_year_price';
+    if (widget.plan.threeYearPrice != null && cheapestPrice == widget.plan.threeYearPrice) return 'three_year_price';
+    if (widget.plan.onetimePrice != null && cheapestPrice == widget.plan.onetimePrice) return 'onetime_price';
     return null;
   }
 
@@ -94,7 +97,6 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
       child: RadioListTile<double>(
         title: Text(
           '$label: ${price.toStringAsFixed(2)} ${widget.t.purchase.rmb}',
-          style: const TextStyle(fontSize: 16),
         ),
         value: price,
         groupValue: vm.selectedPrice,
@@ -215,14 +217,21 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
                   if (viewModel.selectedPrice != null &&
                       viewModel.selectedPeriod != null) {
                     final paymentMethods = await viewModel.handleSubscribe();
-                    print("paymentMethods:$paymentMethods");
+                    final tradeNo = viewModel.tradeNo;
+                    if (tradeNo == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(t.payments.noSuchPlan)),
+                      );
+                      return;
+                    }
+
                     if (paymentMethods.isNotEmpty) {
                       // 显示支付方式对话框
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
                           return PaymentMethodsDialog(
-                            tradeNo: viewModel.tradeNo!,
+                            tradeNo: tradeNo,
                             paymentMethods: paymentMethods,
                             totalAmount: viewModel.selectedPrice!,
                             t: widget.t,
@@ -231,11 +240,11 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
                         },
                       );
                     } else {
-                      // 兜底：应用内WebView拉起支付页
+                      // 兜底：应用内WebView拉起支付页 / 或系统浏览器
                       if (!context.mounted) return;
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => PaymentWebViewPage(tradeNo: viewModel.tradeNo!),
+                          builder: (_) => PaymentWebViewPage(tradeNo: tradeNo),
                         ),
                       );
                     }
