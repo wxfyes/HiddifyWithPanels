@@ -86,47 +86,32 @@ android {
 
     signingConfigs {
         release {
-            // 调试信息
-            println "=== Gradle Debug Info ==="
-            println "ANDROID_KEY_ALIAS: ${System.getenv('ANDROID_KEY_ALIAS')}"
-            println "ANDROID_KEY_PASSWORD: ${System.getenv('ANDROID_KEY_PASSWORD')}"
-            println "ANDROID_STORE_PASSWORD: ${System.getenv('ANDROID_STORE_PASSWORD')}"
-            println "ANDROID_KEYSTORE_PATH: ${System.getenv('ANDROID_KEYSTORE_PATH')}"
-            println "hasKeyStore: $hasKeyStore"
-            println "hasEnvVars: $hasEnvVars"
-            println "=========================="
-            
-            // 只有在环境变量存在时才设置签名配置
-            if (System.getenv('ANDROID_KEY_ALIAS') != null && System.getenv('ANDROID_KEYSTORE_PATH') != null) {
-                println "Setting signing configuration from environment variables"
-                
-                def keystorePath = System.getenv('ANDROID_KEYSTORE_PATH')
-                def keystoreFile = file(keystorePath)
-                println "Keystore file exists: ${keystoreFile.exists()}"
-                println "Keystore file absolute path: ${keystoreFile.absolutePath}"
-                
+            // 优先使用本地key.properties文件
+            if (hasKeyStore) {
+                println "Using local key.properties for signing"
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                println "Local signing configuration set successfully"
+            } else if (System.getenv('ANDROID_KEY_ALIAS') != null && System.getenv('ANDROID_KEYSTORE_PATH') != null) {
+                // 备用：使用环境变量
+                println "Using environment variables for signing"
                 keyAlias System.getenv('ANDROID_KEY_ALIAS')
                 keyPassword System.getenv('ANDROID_KEY_PASSWORD')
-                storeFile keystoreFile
+                storeFile file(System.getenv('ANDROID_KEYSTORE_PATH'))
                 storePassword System.getenv('ANDROID_STORE_PASSWORD')
-                
-                println "Signing configuration set successfully"
+                println "Environment variable signing configuration set successfully"
             } else {
-                println "No environment variables for signing, skipping signing configuration"
+                println "No signing configuration available"
             }
         }
     }
 
     buildTypes {
         release {
-            // 只有在签名配置存在时才使用
-            if (System.getenv('ANDROID_KEY_ALIAS') != null && System.getenv('ANDROID_KEYSTORE_PATH') != null) {
-                println "Release build: Using release signing config"
-                signingConfig signingConfigs.release
-            } else {
-                println "Release build: No signing config available, using debug signing"
-                signingConfig signingConfigs.debug
-            }
+            // 使用release签名配置
+            signingConfig signingConfigs.release
             ndk {
                 //noinspection ChromeOsAbiSupport
                 abiFilters "x86_64", "armeabi-v7a", "arm64-v8a"
