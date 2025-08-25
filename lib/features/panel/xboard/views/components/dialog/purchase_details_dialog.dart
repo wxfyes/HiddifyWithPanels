@@ -52,13 +52,24 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
 
     _provider = purchaseDetailsViewModelProvider(_params);
 
-    // 初始化选择的价格和周期
+    // 立即初始化选择的价格和周期
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final viewModel = ref.read(_provider);
-      final cheapestPrice = _findCheapestPrice();
-      final cheapestPeriod = _findCheapestPeriod(cheapestPrice);
-      if (cheapestPrice != null && cheapestPeriod != null) {
-        viewModel.setSelectedPrice(cheapestPrice, cheapestPeriod);
+      // 直接选择月付作为默认选项
+      if (widget.plan.monthPrice != null) {
+        viewModel.setSelectedPrice(widget.plan.monthPrice!, 'month_price');
+      } else if (widget.plan.quarterPrice != null) {
+        viewModel.setSelectedPrice(widget.plan.quarterPrice!, 'quarter_price');
+      } else if (widget.plan.halfYearPrice != null) {
+        viewModel.setSelectedPrice(widget.plan.halfYearPrice!, 'half_year_price');
+      } else if (widget.plan.yearPrice != null) {
+        viewModel.setSelectedPrice(widget.plan.yearPrice!, 'year_price');
+      } else if (widget.plan.twoYearPrice != null) {
+        viewModel.setSelectedPrice(widget.plan.twoYearPrice!, 'two_year_price');
+      } else if (widget.plan.threeYearPrice != null) {
+        viewModel.setSelectedPrice(widget.plan.threeYearPrice!, 'three_year_price');
+      } else if (widget.plan.onetimePrice != null) {
+        viewModel.setSelectedPrice(widget.plan.onetimePrice!, 'onetime_price');
       }
     });
   }
@@ -113,6 +124,29 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
   Widget build(BuildContext context) {
     final viewModel = ref.watch(_provider);
     final t = ref.watch(translationsProvider);
+    
+    // 确保初始化选中状态
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (viewModel.selectedPeriod == null) {
+        // 直接选择月付作为默认选项
+        if (widget.plan.monthPrice != null) {
+          viewModel.setSelectedPrice(widget.plan.monthPrice!, 'month_price');
+        } else if (widget.plan.quarterPrice != null) {
+          viewModel.setSelectedPrice(widget.plan.quarterPrice!, 'quarter_price');
+        } else if (widget.plan.halfYearPrice != null) {
+          viewModel.setSelectedPrice(widget.plan.halfYearPrice!, 'half_year_price');
+        } else if (widget.plan.yearPrice != null) {
+          viewModel.setSelectedPrice(widget.plan.yearPrice!, 'year_price');
+        } else if (widget.plan.twoYearPrice != null) {
+          viewModel.setSelectedPrice(widget.plan.twoYearPrice!, 'two_year_price');
+        } else if (widget.plan.threeYearPrice != null) {
+          viewModel.setSelectedPrice(widget.plan.threeYearPrice!, 'three_year_price');
+        } else if (widget.plan.onetimePrice != null) {
+          viewModel.setSelectedPrice(widget.plan.onetimePrice!, 'onetime_price');
+        }
+      }
+    });
+    
     return AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),

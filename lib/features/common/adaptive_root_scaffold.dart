@@ -7,7 +7,7 @@ import 'package:hiddify/core/router/router.dart';
 import 'package:hiddify/features/panel/xboard/utils/logout_dialog.dart';
 import 'package:hiddify/features/stats/widget/side_bar_stats_overview.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 
 
 abstract interface class RootScaffold {
@@ -36,6 +36,10 @@ class AdaptiveRootScaffold extends HookConsumerWidget {
       NavigationDestination(
         icon: const Icon(FluentIcons.filter_20_filled),
         label: t.proxies.pageTitle,
+      ),
+      NavigationDestination(
+        icon: const Icon(FluentIcons.globe_20_filled),
+        label: "官网",
       ),
       NavigationDestination(
         icon: const Icon(FluentIcons.money_24_filled),
@@ -76,14 +80,18 @@ class AdaptiveRootScaffold extends HookConsumerWidget {
             context: context,
             builder: (context) => const LogoutDialog(), // 使用 LogoutDialog 组件
           );
+        } else if (index == 2) {
+          // 官网按钮 - 跳转到浏览器
+          final url = Uri.parse('https://www.tianque.cc');
+          launchUrl(url, mode: LaunchMode.externalApplication);
         } else {
           RootScaffold.stateKey.currentState?.closeDrawer();
           switchTab(index, context);
         }
       },
       destinations: destinations,
-      drawerDestinationRange: useMobileRouter ? (4, null) : (0, null),
-      bottomDestinationRange: (0, 4),
+      drawerDestinationRange: useMobileRouter ? (5, null) : (0, null),
+      bottomDestinationRange: (0, 5),
       useBottomSheet: useMobileRouter,
       sidebarTrailing: const Expanded(
         child: Align(
