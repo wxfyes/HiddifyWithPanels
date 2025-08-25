@@ -9,6 +9,7 @@ import 'package:hiddify/features/panel/xboard/services/http_service/auth_service
 import 'package:hiddify/features/panel/xboard/viewmodels/login_viewmodel/login_viewmodel.dart';
 import 'package:hiddify/features/panel/xboard/views/domain_check_indicator.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final loginViewModelProvider = ChangeNotifierProvider((ref) {
   return LoginViewModel(
@@ -196,7 +197,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       const SizedBox(height: 20),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           TextButton(
                             onPressed: () {
@@ -204,6 +205,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             },
                             child: Text(
                               t.login.forgotPassword,
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              final url = Uri.parse('https://www.tianque.cc');
+                              launchUrl(url, mode: LaunchMode.externalApplication);
+                            },
+                            child: Text(
+                              t.login.officialWebsite,
                               style: TextStyle(
                                 color: Theme.of(context).primaryColor,
                                 fontSize: 14,

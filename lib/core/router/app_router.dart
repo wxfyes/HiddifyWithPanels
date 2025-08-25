@@ -82,7 +82,6 @@ final tabLocations = [
   const HomeRoute().location,
   const ProxiesRoute().location,
   null, // 官网按钮占位符
-  const PurchaseRoute().location,
   const UserInfoRoute().location,
   const ConfigOptionsRoute().location,
   const SettingsRoute().location,
@@ -94,17 +93,16 @@ int getCurrentIndex(BuildContext context) {
   final String location = GoRouterState.of(context).uri.path;
   if (location == const HomeRoute().location) return 0;
   if (location == const ProxiesRoute().location) return 1;
-  if (location == const PurchaseRoute().location) return 3; // 官网按钮在索引2，套餐在索引3
-  if (location == const UserInfoRoute().location) return 4;
-  if (location == const ConfigOptionsRoute().location) return 5;
-  if (location == const SettingsRoute().location) return 6;
-  if (location == const LogsOverviewRoute().location) return 7;
-  if (location == const AboutRoute().location) return 8;
+  if (location == const UserInfoRoute().location) return 3; // 调整索引
+  if (location == const ConfigOptionsRoute().location) return 4; // 调整索引
+  if (location == const SettingsRoute().location) return 5; // 调整索引
+  if (location == const LogsOverviewRoute().location) return 6; // 调整索引
+  if (location == const AboutRoute().location) return 7; // 调整索引
   return 0;
 }
 
 void switchTab(int index, BuildContext context) {
-  // 由于添加了官网按钮，需要调整索引映射
+  // 由于隐藏了套餐按钮，需要调整索引映射
   String? location;
   switch (index) {
     case 0:
@@ -117,21 +115,18 @@ void switchTab(int index, BuildContext context) {
       // 官网按钮，不进行路由跳转
       return;
     case 3:
-      location = const PurchaseRoute().location;
-      break;
-    case 4:
       location = const UserInfoRoute().location;
       break;
-    case 5:
+    case 4:
       location = const ConfigOptionsRoute().location;
       break;
-    case 6:
+    case 5:
       location = const SettingsRoute().location;
       break;
-    case 7:
+    case 6:
       location = const LogsOverviewRoute().location;
       break;
-    case 8:
+    case 7:
       location = const AboutRoute().location;
       break;
     default:

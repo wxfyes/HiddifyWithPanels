@@ -41,10 +41,11 @@ class AdaptiveRootScaffold extends HookConsumerWidget {
         icon: const Icon(FluentIcons.globe_20_filled),
         label: "官网",
       ),
-      NavigationDestination(
-        icon: const Icon(FluentIcons.money_24_filled),
-        label: t.purchase.pageTitle,
-      ),
+      // 隐藏套餐按钮
+      // NavigationDestination(
+      //   icon: const Icon(FluentIcons.money_24_filled),
+      //   label: t.purchase.pageTitle,
+      // ),
       NavigationDestination(
         icon: const Icon(FluentIcons.person_20_filled), 
         label: t.userInfo.pageTitle, 
@@ -90,8 +91,8 @@ class AdaptiveRootScaffold extends HookConsumerWidget {
         }
       },
       destinations: destinations,
-      drawerDestinationRange: useMobileRouter ? (5, null) : (0, null),
-      bottomDestinationRange: (0, 5),
+      drawerDestinationRange: useMobileRouter ? (4, null) : (0, null),
+      bottomDestinationRange: (0, 4),
       useBottomSheet: useMobileRouter,
       sidebarTrailing: const Expanded(
         child: Align(
@@ -153,6 +154,31 @@ class _CustomAdaptiveScaffold extends HookConsumerWidget {
                     .toList(),
                 onDestinationSelected: (index) =>
                     selectWithOffset(index, drawerDestinationRange),
+                // 添加彩色字体效果
+                backgroundColor: Colors.grey[900],
+                selectedIconTheme: const IconThemeData(
+                  color: Colors.cyan,
+                  size: 24,
+                ),
+                unselectedIconTheme: const IconThemeData(
+                  color: Colors.white70,
+                  size: 20,
+                ),
+                selectedLabelTextStyle: const TextStyle(
+                  color: Colors.cyan,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.cyan,
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                unselectedLabelTextStyle: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
               ),
             )
           : null,
@@ -167,6 +193,31 @@ class _CustomAdaptiveScaffold extends HookConsumerWidget {
                     .map((dest) => AdaptiveScaffold.toRailDestination(dest))
                     .toList(),
                 onDestinationSelected: onSelectedIndexChange,
+                // 添加彩色字体效果
+                backgroundColor: Colors.grey[900],
+                selectedIconTheme: const IconThemeData(
+                  color: Colors.cyan,
+                  size: 24,
+                ),
+                unselectedIconTheme: const IconThemeData(
+                  color: Colors.white70,
+                  size: 20,
+                ),
+                selectedLabelTextStyle: const TextStyle(
+                  color: Colors.cyan,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.cyan,
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                unselectedLabelTextStyle: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
               ),
             ),
             Breakpoints.large: SlotLayout.from(
@@ -179,6 +230,31 @@ class _CustomAdaptiveScaffold extends HookConsumerWidget {
                     .toList(),
                 onDestinationSelected: onSelectedIndexChange,
                 trailing: sidebarTrailing,
+                // 添加彩色字体效果
+                backgroundColor: Colors.grey[900],
+                selectedIconTheme: const IconThemeData(
+                  color: Colors.cyan,
+                  size: 24,
+                ),
+                unselectedIconTheme: const IconThemeData(
+                  color: Colors.white70,
+                  size: 20,
+                ),
+                selectedLabelTextStyle: const TextStyle(
+                  color: Colors.cyan,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.cyan,
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                unselectedLabelTextStyle: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
               ),
             ),
           },

@@ -11,7 +11,6 @@ import 'package:hiddify/features/panel/xboard/views/components/user_info/order_p
 
 import 'package:hiddify/features/panel/xboard/views/forget_password_view.dart';
 import 'package:hiddify/features/panel/xboard/views/login_view.dart';
-import 'package:hiddify/features/panel/xboard/views/purchase_page.dart';
 import 'package:hiddify/features/panel/xboard/views/register_view.dart';
 import 'package:hiddify/features/panel/xboard/views/user_info_page.dart';
 
@@ -83,10 +82,11 @@ GlobalKey<NavigatorState>? dynamicRootKey =
       path: "/proxies",
       name: ProxiesRoute.name,
     ),
-    TypedGoRoute<PurchaseRoute>(
-      path: "/purchase",
-      name: PurchaseRoute.name,
-    ),
+    // 移除套餐路由
+    // TypedGoRoute<PurchaseRoute>(
+    //   path: "/purchase",
+    //   name: PurchaseRoute.name,
+    // ),
     TypedGoRoute<OrderRoute>(
       path: "/order",
       name: OrderRoute.name,
@@ -133,10 +133,6 @@ class MobileWrapperRoute extends ShellRouteData {
           name: QuickSettingsRoute.name,
         ),
       ],
-    ),
-    TypedGoRoute<PurchaseRoute>(
-      path: "/purchase",
-      name: PurchaseRoute.name,
     ),
     TypedGoRoute<OrderRoute>(
       path: "/order",
@@ -271,19 +267,6 @@ class ProxiesRoute extends GoRouteData {
     return const NoTransitionPage(
       name: name,
       child: ProxiesOverviewPage(),
-    );
-  }
-}
-
-class PurchaseRoute extends GoRouteData {
-  const PurchaseRoute();
-  static const name = "Purchase";
-
-  @override
-  Page<void> buildPage(BuildContext context, GoRouterState state) {
-    return const NoTransitionPage(
-      name: name,
-      child: PurchasePage(), // 确保 PurchasePage 是定义好的组件
     );
   }
 }

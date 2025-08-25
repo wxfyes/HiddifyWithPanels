@@ -37,8 +37,8 @@
         "pageTitle": "Home",
         "emptyProfilesMsg": "Start by adding a subscription profile",
         "noActiveProfileMsg": "Select a profile",
-        "noSubscriptionMsg": "No available subscription found. Please go to the purchase page to buy a plan.",
-        "goToPurchasePage": "Go to Purchase Page"
+        "noSubscriptionMsg": "No available subscription found. Please visit the official website to buy a plan.",
+        "goToPurchasePage": "Visit Official Website"
     },
     "purchase": {
         "pageTitle": "Plans",
@@ -163,14 +163,16 @@
         "confirmButton": "Logout"
     },
     "login": {
-        "welcome": "Welcome to V2Hiddify",
-        "username": "Username",
+        "pageTitle": "Login",
+        "welcome": "Welcome to",
+        "username": "Email",
         "password": "Password",
+        "rememberMe": "Remember me",
         "loginButton": "Login",
+        "loginErr": "Login failed",
         "forgotPassword": "Forgot Password",
         "register": "Register",
-        "rememberMe": "Remember Me",
-        "loginErr": "Login failed"
+        "officialWebsite": "Official Website"
     },
     "forgetPassword": {
         "pageTitle": "Forget Password",
