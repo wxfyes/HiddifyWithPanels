@@ -24,6 +24,7 @@ class PurchaseDetailsViewModel extends ChangeNotifier {
   void setSelectedPrice(double? price, String? period) {
     selectedPrice = price;
     selectedPeriod = period;
+    print('[purchase] setSelectedPrice -> price=$price period=$period');
     notifyListeners();
   }
 
