@@ -16,6 +16,7 @@ import 'package:hiddify/features/connection/notifier/connection_notifier.dart';
 import 'package:hiddify/features/connection/model/connection_status.dart';
 import 'package:hiddify/features/proxy/active/active_proxy_notifier.dart';
 import 'package:hiddify/features/config_option/notifier/config_option_notifier.dart';
+import 'package:hiddify/features/config_option/data/config_option_repository.dart';
 import 'package:hiddify/features/connection/widget/experimental_feature_notice.dart';
 import 'package:hiddify/core/theme/theme_extensions.dart';
 import 'package:hiddify/utils/placeholders.dart';

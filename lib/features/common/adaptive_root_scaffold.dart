@@ -175,10 +175,6 @@ class _CustomAdaptiveScaffold extends HookConsumerWidget {
                     ),
                   ],
                 ),
-                unselectedLabelTextStyle: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
               ),
             )
           : null,
@@ -214,10 +210,6 @@ class _CustomAdaptiveScaffold extends HookConsumerWidget {
                     ),
                   ],
                 ),
-                unselectedLabelTextStyle: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
               ),
             ),
             Breakpoints.large: SlotLayout.from(
@@ -250,10 +242,6 @@ class _CustomAdaptiveScaffold extends HookConsumerWidget {
                       blurRadius: 8,
                     ),
                   ],
-                ),
-                unselectedLabelTextStyle: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
                 ),
               ),
             ),
