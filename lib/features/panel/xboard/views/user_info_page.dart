@@ -68,11 +68,43 @@ class _UserInfoPageState extends ConsumerState<UserInfoPage> {
               ),
             );
           } else if (snapshot.hasError) {
-            // 显示错误信息
+            // 显示错误信息，并提供重试按钮
             return Center(
-              child: Text(
-                '${t.userInfo.fetchUserInfoError} ${snapshot.error}',
-                style: const TextStyle(fontSize: 16, color: Colors.red),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '${t.userInfo.fetchUserInfoError}',
+                      style: const TextStyle(fontSize: 18, color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${snapshot.error}',
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: _refreshData,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(t.general.addToClipboard),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
