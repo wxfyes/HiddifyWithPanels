@@ -24,14 +24,28 @@ class PurchaseDetailsViewModel extends ChangeNotifier {
   void setSelectedPrice(double? price, String? period) {
     selectedPrice = price;
     selectedPeriod = period;
-    print('[purchase] setSelectedPrice -> price=$price period=$period');
     notifyListeners();
+  }
+
+  // 新增：验证选择状态的方法
+  bool get isSelectionValid => selectedPrice != null && selectedPeriod != null;
+
+  // 新增：获取当前选择状态的方法
+  String get selectionStatus {
+    if (selectedPrice == null && selectedPeriod == null) {
+      return '未选择任何选项';
+    } else if (selectedPrice == null) {
+      return '已选择时长但价格为空';
+    } else if (selectedPeriod == null) {
+      return '已选择价格但时长为空';
+    } else {
+      return '选择完整';
+    }
   }
 
   Future<List<dynamic>> handleSubscribe() async {
     final accessToken = await getToken();
     if (accessToken == null) {
-      print("[purchase] Access token is null");
       return [];
     }
 
@@ -39,23 +53,20 @@ class PurchaseDetailsViewModel extends ChangeNotifier {
       // 检查未支付的订单
       final List<Order> orders =
           await _orderService.fetchUserOrders(accessToken);
-      print('[purchase] fetched orders: count=${orders.length}');
       for (final order in orders) {
-        print('[purchase] order: tradeNo=${order.tradeNo} status=${order.status}');
         if (order.status == 0) {
           // 如果订单未支付
           await _orderService.cancelOrder(order.tradeNo!, accessToken);
-          print('[purchase] cancelled unpaid order ${order.tradeNo}');
         }
       }
-      print("[purchase] creating order with planId=$planId period=$selectedPeriod price=$selectedPrice");
+
       // 创建新订单
       final orderResponse = await _purchaseService.createOrder(
         planId,
         selectedPeriod!,
         accessToken,
       );
-      print("[purchase] order save response: $orderResponse");
+
       if (orderResponse != null) {
         tradeNo = orderResponse['data']?.toString();
         if (kDebugMode) {
@@ -63,7 +74,6 @@ class PurchaseDetailsViewModel extends ChangeNotifier {
         }
         final paymentMethods =
             await _purchaseService.getPaymentMethods(accessToken, tradeNo: tradeNo);
-        print('[purchase] payment methods result length=${paymentMethods.length}');
         return paymentMethods;
       } else {
         if (kDebugMode) {
@@ -72,7 +82,9 @@ class PurchaseDetailsViewModel extends ChangeNotifier {
         return [];
       }
     } catch (e) {
-      print('[purchase] error: $e');
+      if (kDebugMode) {
+        print('[purchase] error: $e');
+      }
       return [];
     }
   }

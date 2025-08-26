@@ -52,10 +52,33 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
 
     _provider = purchaseDetailsViewModelProvider(_params);
 
-    // 立即初始化选择的价格和周期
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = ref.read(_provider);
-      // 直接选择月付作为默认选项
+    // 立即初始化选择的价格和周期，不使用 addPostFrameCallback
+    _initializeDefaultSelection();
+  }
+
+  void _initializeDefaultSelection() {
+    // 直接初始化，确保状态立即设置
+    if (widget.plan.monthPrice != null) {
+      ref.read(_provider).setSelectedPrice(widget.plan.monthPrice!, 'month_price');
+    } else if (widget.plan.quarterPrice != null) {
+      ref.read(_provider).setSelectedPrice(widget.plan.quarterPrice!, 'quarter_price');
+    } else if (widget.plan.halfYearPrice != null) {
+      ref.read(_provider).setSelectedPrice(widget.plan.halfYearPrice!, 'half_year_price');
+    } else if (widget.plan.yearPrice != null) {
+      ref.read(_provider).setSelectedPrice(widget.plan.yearPrice!, 'year_price');
+    } else if (widget.plan.twoYearPrice != null) {
+      ref.read(_provider).setSelectedPrice(widget.plan.twoYearPrice!, 'two_year_price');
+    } else if (widget.plan.threeYearPrice != null) {
+      ref.read(_provider).setSelectedPrice(widget.plan.threeYearPrice!, 'three_year_price');
+    } else if (widget.plan.onetimePrice != null) {
+      ref.read(_provider).setSelectedPrice(widget.plan.onetimePrice!, 'onetime_price');
+    }
+  }
+
+  // 新增：强制设置默认选择的方法
+  void _forceSetDefaultSelection() {
+    final viewModel = ref.read(_provider);
+    if (viewModel.selectedPeriod == null || viewModel.selectedPrice == null) {
       if (widget.plan.monthPrice != null) {
         viewModel.setSelectedPrice(widget.plan.monthPrice!, 'month_price');
       } else if (widget.plan.quarterPrice != null) {
@@ -71,7 +94,7 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
       } else if (widget.plan.onetimePrice != null) {
         viewModel.setSelectedPrice(widget.plan.onetimePrice!, 'onetime_price');
       }
-    });
+    }
   }
 
   double? _findCheapestPrice() {
@@ -250,11 +273,17 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 onPressed: () async {
-                  // 兜底：若出现价格已选但周期丢失的情况，按价格反推周期
-                  if (viewModel.selectedPeriod == null && viewModel.selectedPrice != null) {
-                    final inferred = _findCheapestPeriod(viewModel.selectedPrice);
-                    if (inferred != null) {
-                      viewModel.setSelectedPrice(viewModel.selectedPrice, inferred);
+                  // 增强状态验证逻辑
+                  if (viewModel.selectedPeriod == null || viewModel.selectedPrice == null) {
+                    // 强制设置默认值
+                    _forceSetDefaultSelection();
+                    
+                    // 再次验证
+                    if (viewModel.selectedPeriod == null || viewModel.selectedPrice == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('请选择订阅时长')),
+                      );
+                      return;
                     }
                   }
 
