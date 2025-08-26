@@ -41,11 +41,10 @@ class AdaptiveRootScaffold extends HookConsumerWidget {
         icon: const Icon(FluentIcons.globe_20_filled),
         label: "官网",
       ),
-      // 隐藏套餐按钮
-      // NavigationDestination(
-      //   icon: const Icon(FluentIcons.money_24_filled),
-      //   label: t.purchase.pageTitle,
-      // ),
+      NavigationDestination(
+        icon: const Icon(FluentIcons.money_24_filled),
+        label: t.purchase.pageTitle,
+      ),
       NavigationDestination(
         icon: const Icon(FluentIcons.person_20_filled), 
         label: t.userInfo.pageTitle, 
@@ -81,7 +80,7 @@ class AdaptiveRootScaffold extends HookConsumerWidget {
             context: context,
             builder: (context) => const LogoutDialog(), // 使用 LogoutDialog 组件
           );
-        } else if (index == 2) {
+        } else if (index == 3) {
           // 官网按钮 - 跳转到浏览器
           final url = Uri.parse('https://www.tianque.cc');
           launchUrl(url, mode: LaunchMode.externalApplication);
@@ -144,36 +143,42 @@ class _CustomAdaptiveScaffold extends HookConsumerWidget {
     return Scaffold(
       key: RootScaffold.stateKey,
       drawer: Breakpoints.small.isActive(context)
-          ? Drawer(
-              width: (MediaQuery.sizeOf(context).width * 0.88).clamp(1, 304),
-              child: NavigationRail(
-                extended: true,
-                selectedIndex: selectedWithOffset(drawerDestinationRange),
-                destinations: destinationsSlice(drawerDestinationRange)
-                    .map((dest) => AdaptiveScaffold.toRailDestination(dest))
-                    .toList(),
-                onDestinationSelected: (index) =>
-                    selectWithOffset(index, drawerDestinationRange),
-                // 添加彩色字体效果
-                backgroundColor: Colors.grey[900],
-                selectedIconTheme: const IconThemeData(
-                  color: Colors.cyan,
-                  size: 24,
-                ),
-                unselectedIconTheme: const IconThemeData(
-                  color: Colors.white70,
-                  size: 20,
-                ),
-                selectedLabelTextStyle: const TextStyle(
-                  color: Colors.cyan,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.cyan,
-                      blurRadius: 8,
-                    ),
+          ? Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFFE6E6FA), // 淡紫色
+                    Color(0xFFE0F6FF), // 淡蓝色
                   ],
+                ),
+              ),
+              child: Drawer(
+                width: (MediaQuery.sizeOf(context).width * 0.88).clamp(1, 304),
+                child: NavigationRail(
+                  extended: true,
+                  selectedIndex: selectedWithOffset(drawerDestinationRange),
+                  destinations: destinationsSlice(drawerDestinationRange)
+                      .map((dest) => AdaptiveScaffold.toRailDestination(dest))
+                      .toList(),
+                  onDestinationSelected: (index) =>
+                      selectWithOffset(index, drawerDestinationRange),
+                  // 添加彩色字体效果
+                  backgroundColor: Colors.transparent,
+                  selectedIconTheme: const IconThemeData(
+                    color: Colors.indigo,
+                    size: 24,
+                  ),
+                  unselectedIconTheme: const IconThemeData(
+                    color: Colors.indigo,
+                    size: 20,
+                  ),
+                  selectedLabelTextStyle: const TextStyle(
+                    color: Colors.indigo,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             )
@@ -183,65 +188,77 @@ class _CustomAdaptiveScaffold extends HookConsumerWidget {
           config: <Breakpoint, SlotLayoutConfig>{
             Breakpoints.medium: SlotLayout.from(
               key: const Key('primaryNavigation'),
-              builder: (_) => AdaptiveScaffold.standardNavigationRail(
-                selectedIndex: selectedIndex,
-                destinations: destinations
-                    .map((dest) => AdaptiveScaffold.toRailDestination(dest))
-                    .toList(),
-                onDestinationSelected: onSelectedIndexChange,
-                // 添加彩色字体效果
-                backgroundColor: Colors.grey[900],
-                selectedIconTheme: const IconThemeData(
-                  color: Colors.cyan,
-                  size: 24,
+              builder: (_) => Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFE6E6FA), // 淡紫色
+                      Color(0xFFE0F6FF), // 淡蓝色
+                    ],
+                  ),
                 ),
-                unselectedIconTheme: const IconThemeData(
-                  color: Colors.white70,
-                  size: 20,
-                ),
-                selectedLabelTextStyle: const TextStyle(
-                  color: Colors.cyan,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.cyan,
-                      blurRadius: 8,
-                    ),
-                  ],
+                child: AdaptiveScaffold.standardNavigationRail(
+                  selectedIndex: selectedIndex,
+                  destinations: destinations
+                      .map((dest) => AdaptiveScaffold.toRailDestination(dest))
+                      .toList(),
+                  onDestinationSelected: onSelectedIndexChange,
+                  // 添加彩色字体效果
+                  backgroundColor: Colors.transparent,
+                  selectedIconTheme: const IconThemeData(
+                    color: Colors.indigo,
+                    size: 24,
+                  ),
+                  unselectedIconTheme: const IconThemeData(
+                    color: Colors.indigo,
+                    size: 20,
+                  ),
+                  selectedLabelTextStyle: const TextStyle(
+                    color: Colors.indigo,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
             Breakpoints.large: SlotLayout.from(
               key: const Key('primaryNavigation1'),
-              builder: (_) => AdaptiveScaffold.standardNavigationRail(
-                extended: true,
-                selectedIndex: selectedIndex,
-                destinations: destinations
-                    .map((dest) => AdaptiveScaffold.toRailDestination(dest))
-                    .toList(),
-                onDestinationSelected: onSelectedIndexChange,
-                trailing: sidebarTrailing,
-                // 添加彩色字体效果
-                backgroundColor: Colors.grey[900],
-                selectedIconTheme: const IconThemeData(
-                  color: Colors.cyan,
-                  size: 24,
+              builder: (_) => Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFE6E6FA), // 淡紫色
+                      Color(0xFFE0F6FF), // 淡蓝色
+                    ],
+                  ),
                 ),
-                unselectedIconTheme: const IconThemeData(
-                  color: Colors.white70,
-                  size: 20,
-                ),
-                selectedLabelTextStyle: const TextStyle(
-                  color: Colors.cyan,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.cyan,
-                      blurRadius: 8,
-                    ),
-                  ],
+                child: AdaptiveScaffold.standardNavigationRail(
+                  extended: true,
+                  selectedIndex: selectedIndex,
+                  destinations: destinations
+                      .map((dest) => AdaptiveScaffold.toRailDestination(dest))
+                      .toList(),
+                  onDestinationSelected: onSelectedIndexChange,
+                  trailing: sidebarTrailing,
+                  // 添加彩色字体效果
+                  backgroundColor: Colors.transparent,
+                  selectedIconTheme: const IconThemeData(
+                    color: Colors.indigo,
+                    size: 24,
+                  ),
+                  unselectedIconTheme: const IconThemeData(
+                    color: Colors.indigo,
+                    size: 20,
+                  ),
+                  selectedLabelTextStyle: const TextStyle(
+                    color: Colors.indigo,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),

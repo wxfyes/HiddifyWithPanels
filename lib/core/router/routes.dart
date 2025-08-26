@@ -8,6 +8,7 @@ import 'package:hiddify/features/home/widget/home_page.dart';
 import 'package:hiddify/features/intro/widget/intro_page.dart';
 import 'package:hiddify/features/log/overview/logs_overview_page.dart';
 import 'package:hiddify/features/panel/xboard/views/components/user_info/order_page.dart';
+import 'package:hiddify/features/panel/xboard/views/purchase_page.dart';
 
 import 'package:hiddify/features/panel/xboard/views/forget_password_view.dart';
 import 'package:hiddify/features/panel/xboard/views/login_view.dart';
@@ -82,11 +83,10 @@ GlobalKey<NavigatorState>? dynamicRootKey =
       path: "/proxies",
       name: ProxiesRoute.name,
     ),
-    // 移除套餐路由
-    // TypedGoRoute<PurchaseRoute>(
-    //   path: "/purchase",
-    //   name: PurchaseRoute.name,
-    // ),
+    TypedGoRoute<PurchaseRoute>(
+      path: "/purchase",
+      name: PurchaseRoute.name,
+    ),
     TypedGoRoute<OrderRoute>(
       path: "/order",
       name: OrderRoute.name,
@@ -275,6 +275,20 @@ class ProxiesRoute extends GoRouteData {
   path: "/order",
   name: OrderRoute.name,
 )
+class PurchaseRoute extends GoRouteData {
+  const PurchaseRoute();
+  static const name = "Purchase";
+
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) {
+    return const MaterialPage(
+      fullscreenDialog: true,
+      name: name,
+      child: PurchasePage(),
+    );
+  }
+}
+
 class OrderRoute extends GoRouteData {
   const OrderRoute();
   static const name = "Order";

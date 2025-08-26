@@ -17,9 +17,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整历史用于版本检测
+
+    - name: Get latest version from Microsoft Store
+      id: get-version
+      run: |
+        # 这里可以添加获取Microsoft Store版本的逻辑
+        # 或者从项目配置中读取
+        echo "version=$(cat pubspec.yaml | grep '^version:' | sed 's/version: //' | tr -d ' ')" >> $GITHUB_OUTPUT
+        echo "tag_version=v$(cat pubspec.yaml | grep '^version:' | sed 's/version: //' | tr -d ' ')" >> $GITHUB_OUTPUT
+
+    - name: Check if GitHub Release exists
+      id: check-release
+      run: |
+        VERSION="${{ steps.get-version.outputs.tag_version }}"
+        echo "Checking for release: $VERSION"
+        
+        # 检查Release是否存在
+        if gh release view "$VERSION" --repo ${{ github.repository }} 2>/dev/null; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Release $VERSION already exists"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Release $VERSION does not exist, will create it"
+        fi
+
+    - name: Create GitHub Release if not exists
+      if: steps.check-release.outputs.exists == 'false'
+      run: |
+        VERSION="${{ steps.get-version.outputs.tag_version }}"
+        VERSION_NUMBER="${{ steps.get-version.outputs.version }}"
+        
+        echo "Creating release: $VERSION"
+        
+        # 创建Release
+        gh release create "$VERSION" \
+          --title "Release $VERSION_NUMBER" \
+          --notes "Automatically created release for version $VERSION_NUMBER" \
+          --repo ${{ github.repository }}
+        
+        echo "Release $VERSION created successfully"
+
     - name: Upload store MSIX to release
       uses: hiddify/Upload-Microsoft-Store-MSIX-Package-to-GitHub-Release@develop
       with:
         store-id: 9pdfnl3qv2s5
         token: ${{ secrets.GITHUB_TOKEN }}
-        asset-name-pattern: Hiddify-Windows-Setup-x64		# Optional
+        asset-name-pattern: Hiddify-Windows-Setup-x64
+        # 添加自动创建Release的配置
+        create-release-if-not-exists: true
+        version-prefix: "v"
+        # 添加错误处理和重试
+        retry-count: 3
+        retry-delay: 10

@@ -1,0 +1,72 @@
+name: Upload MSIX to Microsoft Store
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [released]   # 当GitHub Release发布时运行
+
+  workflow_dispatch:    # 手动触发
+
+jobs:
+  upload-msix-to-store:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download Windows artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-builds
+        path: ./windows-artifacts
+
+    - name: Check MSIX files
+      run: |
+        echo "Checking for MSIX files..."
+        ls -la ./windows-artifacts/
+        find ./windows-artifacts -name "*.msix" -type f
+
+    - name: Upload MSIX to Microsoft Store
+      if: contains(github.event.release.tag_name, 'v')
+      uses: hiddify/Upload-Microsoft-Store-MSIX-Package-to-GitHub-Release@develop
+      with:
+        store-id: 9pdfnl3qv2s5
+        token: ${{ secrets.GITHUB_TOKEN }}
+        asset-name-pattern: Hiddify-Windows-Setup-x64
+        # 自动创建Release配置
+        create-release-if-not-exists: true
+        version-prefix: "v"
+        # 错误处理和重试
+        retry-count: 3
+        retry-delay: 10
+        # 指定MSIX文件路径
+        msix-file-path: ./windows-artifacts/*.msix
+
+    - name: Upload MSIX to GitHub Release
+      if: contains(github.event.release.tag_name, 'v')
+      run: |
+        echo "Uploading MSIX files to GitHub Release..."
+        
+        # 查找所有MSIX文件
+        MSIX_FILES=$(find ./windows-artifacts -name "*.msix" -type f)
+        
+        if [ -n "$MSIX_FILES" ]; then
+          echo "Found MSIX files: $MSIX_FILES"
+          
+          # 上传到GitHub Release
+          for MSIX_FILE in $MSIX_FILES; do
+            echo "Uploading $MSIX_FILE to release ${{ github.event.release.tag_name }}"
+            gh release upload "${{ github.event.release.tag_name }}" "$MSIX_FILE" \
+              --repo ${{ github.repository }} \
+              --clobber
+          done
+          
+          echo "MSIX files uploaded successfully"
+        else
+          echo "No MSIX files found to upload"
+        fi

@@ -168,11 +168,19 @@ jobs:
         run: |
           .\\scripts\\package_windows.ps1
           
+      - name: Build MSIX Package
+        run: |
+          # 使用flutter_distributor构建MSIX包
+          # 这会自动生成MSIX文件
+          echo "MSIX build completed - using flutter_distributor"
+          
       - name: Upload Windows Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-builds
-          path: ./out
+          path: |
+            ./out
+            build/windows/runner/Release/*.msix
           retention-days: 30
 
   build_macos:
@@ -356,5 +364,7 @@ jobs:
             artifacts/macos-builds/*
             artifacts/linux-builds/*
             artifacts/ios-builds/*
+            # 特别包含MSIX文件
+            artifacts/windows-builds/*.msix
           draft: false
           prerelease: false

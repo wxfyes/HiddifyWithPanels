@@ -93,16 +93,16 @@ int getCurrentIndex(BuildContext context) {
   final String location = GoRouterState.of(context).uri.path;
   if (location == const HomeRoute().location) return 0;
   if (location == const ProxiesRoute().location) return 1;
-  if (location == const UserInfoRoute().location) return 3; // 调整索引
-  if (location == const ConfigOptionsRoute().location) return 4; // 调整索引
-  if (location == const SettingsRoute().location) return 5; // 调整索引
-  if (location == const LogsOverviewRoute().location) return 6; // 调整索引
-  if (location == const AboutRoute().location) return 7; // 调整索引
+  if (location == const PurchaseRoute().location) return 2;
+  if (location == const UserInfoRoute().location) return 4; // 调整索引
+  if (location == const ConfigOptionsRoute().location) return 5; // 调整索引
+  if (location == const SettingsRoute().location) return 6; // 调整索引
+  if (location == const LogsOverviewRoute().location) return 7; // 调整索引
+  if (location == const AboutRoute().location) return 8; // 调整索引
   return 0;
 }
 
 void switchTab(int index, BuildContext context) {
-  // 由于隐藏了套餐按钮，需要调整索引映射
   String? location;
   switch (index) {
     case 0:
@@ -112,21 +112,24 @@ void switchTab(int index, BuildContext context) {
       location = const ProxiesRoute().location;
       break;
     case 2:
+      location = const PurchaseRoute().location;
+      break;
+    case 3:
       // 官网按钮，不进行路由跳转
       return;
-    case 3:
+    case 4:
       location = const UserInfoRoute().location;
       break;
-    case 4:
+    case 5:
       location = const ConfigOptionsRoute().location;
       break;
-    case 5:
+    case 6:
       location = const SettingsRoute().location;
       break;
-    case 6:
+    case 7:
       location = const LogsOverviewRoute().location;
       break;
-    case 7:
+    case 8:
       location = const AboutRoute().location;
       break;
     default:
