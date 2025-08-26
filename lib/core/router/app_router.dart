@@ -82,6 +82,7 @@ final tabLocations = [
   const HomeRoute().location,
   const ProxiesRoute().location,
   null, // 官网按钮占位符
+  const PurchaseRoute().location, // 套餐路由
   const UserInfoRoute().location,
   const ConfigOptionsRoute().location,
   const SettingsRoute().location,
@@ -93,12 +94,12 @@ int getCurrentIndex(BuildContext context) {
   final String location = GoRouterState.of(context).uri.path;
   if (location == const HomeRoute().location) return 0;
   if (location == const ProxiesRoute().location) return 1;
-  if (location == const PurchaseRoute().location) return 2;
-  if (location == const UserInfoRoute().location) return 4; // 调整索引
-  if (location == const ConfigOptionsRoute().location) return 5; // 调整索引
-  if (location == const SettingsRoute().location) return 6; // 调整索引
-  if (location == const LogsOverviewRoute().location) return 7; // 调整索引
-  if (location == const AboutRoute().location) return 8; // 调整索引
+  if (location == const PurchaseRoute().location) return 3; // 套餐路由在索引3
+  if (location == const UserInfoRoute().location) return 4;
+  if (location == const ConfigOptionsRoute().location) return 5;
+  if (location == const SettingsRoute().location) return 6;
+  if (location == const LogsOverviewRoute().location) return 7;
+  if (location == const AboutRoute().location) return 8;
   return 0;
 }
 
@@ -112,11 +113,11 @@ void switchTab(int index, BuildContext context) {
       location = const ProxiesRoute().location;
       break;
     case 2:
-      location = const PurchaseRoute().location;
-      break;
-    case 3:
       // 官网按钮，不进行路由跳转
       return;
+    case 3:
+      location = const PurchaseRoute().location;
+      break;
     case 4:
       location = const UserInfoRoute().location;
       break;

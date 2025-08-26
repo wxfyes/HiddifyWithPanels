@@ -80,7 +80,7 @@ class AdaptiveRootScaffold extends HookConsumerWidget {
             context: context,
             builder: (context) => const LogoutDialog(), // 使用 LogoutDialog 组件
           );
-        } else if (index == 3) {
+        } else if (index == 2) {
           // 官网按钮 - 跳转到浏览器
           final url = Uri.parse('https://www.tianque.cc');
           launchUrl(url, mode: LaunchMode.externalApplication);

@@ -134,6 +134,10 @@ class MobileWrapperRoute extends ShellRouteData {
         ),
       ],
     ),
+    TypedGoRoute<PurchaseRoute>(
+      path: "/purchase",
+      name: PurchaseRoute.name,
+    ),
     TypedGoRoute<OrderRoute>(
       path: "/order",
       name: OrderRoute.name,
@@ -271,9 +275,9 @@ class ProxiesRoute extends GoRouteData {
   }
 }
 
-@TypedGoRoute<OrderRoute>(
-  path: "/order",
-  name: OrderRoute.name,
+@TypedGoRoute<PurchaseRoute>(
+  path: "/purchase",
+  name: PurchaseRoute.name,
 )
 class PurchaseRoute extends GoRouteData {
   const PurchaseRoute();
