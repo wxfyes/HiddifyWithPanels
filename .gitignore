@@ -165,3 +165,4 @@ node_modules/
 
 # TernJS port file
 .tern-port
+.github/workflows/WORKFLOW_CHANGES.md
