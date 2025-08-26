@@ -1,11 +1,18 @@
 name: Auto Build All Platforms
 
 on:
-  push:
-    branches: [ main, master ]
-    tags: [ 'v*' ]
-  pull_request:
-    branches: [ main, master ]
+  # 移除自动推送构建，只保留手动触发和tag发布
+  # push:
+  #   branches: [ main, master ]
+  #   tags: [ 'v*' ]
+  # pull_request:
+  #   branches: [ main, master ]
+  
+  # 只在发布tag时自动构建
+  release:
+    types: [published]
+  
+  # 手动触发构建
   workflow_dispatch:
     inputs:
       platform:
