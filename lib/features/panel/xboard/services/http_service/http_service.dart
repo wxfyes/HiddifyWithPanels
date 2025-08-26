@@ -6,10 +6,14 @@ import 'package:hiddify/features/panel/xboard/services/http_service/domain_servi
 import 'package:http/http.dart' as http;
 
 class HttpService {
-  static String baseUrl = 'https://go.126581.xyz'; // 替换为你的实际基础 URL
+  static String baseUrl = 'https://123.108.70.221:8443'; // 使用原来的反代服务器地址
   // 初始化服务并设置动态域名
   static Future<void> initialize() async {
-    baseUrl = await DomainService.fetchValidDomain();
+    print('HttpService.initialize() called, current baseUrl: $baseUrl');
+    final newBaseUrl = await DomainService.fetchValidDomain();
+    print('DomainService.fetchValidDomain() returned: $newBaseUrl');
+    baseUrl = newBaseUrl;
+    print('HttpService.initialize() completed, new baseUrl: $baseUrl');
   }
 
   // 统一的 GET 请求方法
@@ -58,6 +62,10 @@ class HttpService {
     bool requiresHeaders = true, // 是否添加内容类型头
     bool sendAsJson = false, // true 时按 JSON 发送
   }) async {
+    // 强制对订单保存接口使用 JSON 格式
+    if (endpoint == '/api/v1/user/order/save') {
+      sendAsJson = true;
+    }
     final url = Uri.parse('$baseUrl$endpoint');
 
     try {
@@ -69,13 +77,32 @@ class HttpService {
         print("POST $baseUrl$endpoint request body: $body (json=$sendAsJson)");
       }
 
+      // 构建请求头，包含认证信息
+      Map<String, String> requestHeaders = {};
+      if (requiresHeaders) {
+        requestHeaders = headers ?? {};
+        if (sendAsJson) {
+          requestHeaders['Content-Type'] = 'application/json';
+        } else {
+          requestHeaders['Content-Type'] = 'application/x-www-form-urlencoded';
+        }
+        
+        // 如果请求体包含 auth_data，添加到 Authorization 头
+        if (body.containsKey('auth_data')) {
+          final authData = body['auth_data'] as String;
+          requestHeaders['Authorization'] = 'Bearer $authData';
+          if (kDebugMode) {
+            print("Added Authorization header: Bearer $authData");
+          }
+        }
+      }
+
       late http.Response response;
       if (sendAsJson) {
         response = await http
             .post(
               url,
-              headers:
-                  requiresHeaders ? (headers ?? {'Content-Type': 'application/json'}) : null,
+              headers: requiresHeaders ? requestHeaders : null,
               body: json.encode(body),
             )
             .timeout(const Duration(seconds: 20));
@@ -91,9 +118,7 @@ class HttpService {
         response = await http
             .post(
               url,
-              headers: requiresHeaders
-                  ? (headers ?? {'Content-Type': 'application/x-www-form-urlencoded'})
-                  : null,
+              headers: requiresHeaders ? requestHeaders : null,
               body: urlEncodedBody,
             )
             .timeout(const Duration(seconds: 20));

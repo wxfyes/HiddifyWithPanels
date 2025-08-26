@@ -8,8 +8,11 @@ class PaymentService {
       String tradeNo, String method, String accessToken,) async {
     return await _httpService.postRequest(
       "/api/v1/user/order/checkout",
-      {"trade_no": tradeNo, "method": method},
-      headers: {'Authorization': accessToken},
+      {"trade_no": tradeNo, "method": method, "auth_data": accessToken},
+      headers: {
+        'Referer': 'https://123.108.70.221:8443',
+        'User-Agent': 'HiddifyWithPanels/2.5.7',
+      },
     );
   }
 

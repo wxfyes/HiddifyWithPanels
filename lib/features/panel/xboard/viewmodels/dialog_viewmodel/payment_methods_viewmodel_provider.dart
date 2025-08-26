@@ -9,11 +9,13 @@ class PaymentMethodsViewModelParams {
   final String tradeNo;
   final double totalAmount;
   final VoidCallback onPaymentSuccess;
+  final Function(String) onOpenInAppPayment; // 新增：应用内支付回调
 
   PaymentMethodsViewModelParams({
     required this.tradeNo,
     required this.totalAmount,
     required this.onPaymentSuccess,
+    required this.onOpenInAppPayment, // 新增：应用内支付回调
   });
 }
 
@@ -23,5 +25,6 @@ final paymentMethodsViewModelProvider = ChangeNotifierProvider.autoDispose
     tradeNo: params.tradeNo,
     totalAmount: params.totalAmount,
     onPaymentSuccess: params.onPaymentSuccess,
+    onOpenInAppPayment: params.onOpenInAppPayment, // 新增：应用内支付回调
   ),
 );

@@ -182,7 +182,26 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
             IconButton(
               icon: const Icon(Icons.close, color: Colors.white),
               onPressed: () {
-                Navigator.of(context).pop();
+                try {
+                  // 尝试使用当前上下文关闭
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  } else {
+                    // 如果当前上下文无效，尝试使用全局上下文
+                    Navigator.of(widget.ref.context).pop();
+                  }
+                } catch (e) {
+                  if (kDebugMode) {
+                    print('关闭对话框失败: $e');
+                  }
+                  // 最后的备用方案：强制关闭
+                  try {
+                    Navigator.of(widget.ref.context).pop();
+                  } catch (_) {
+                    // 如果还是失败，尝试使用 Navigator.pop(context)
+                    Navigator.pop(context);
+                  }
+                }
               },
             ),
           ],
@@ -257,10 +276,33 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton(
-                onPressed: () async {
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // 添加关闭按钮
+                TextButton(
+                  onPressed: () {
+                    try {
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      } else {
+                        Navigator.of(widget.ref.context).pop();
+                      }
+                    } catch (e) {
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: Text(
+                    '关闭',
+                    style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                // 订阅按钮
+                ElevatedButton(
+                  onPressed: () async {
                   // 增强状态验证逻辑
                   if (viewModel.selectedPeriod == null || viewModel.selectedPrice == null) {
                     // 强制设置默认值
@@ -333,20 +375,57 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
                             totalAmount: viewModel.selectedPrice!,
                             t: widget.t,
                             ref: widget.ref,
+                                                                                      onOpenInAppPayment: (String paymentUrl) {
+                              if (kDebugMode) {
+                                print('开始外跳支付流程，paymentUrl: $paymentUrl');
+                              }
+                              
+                              // 先外跳支付，再关闭对话框，避免 deactivated widget 错误
+                              try {
+                                // 直接外跳支付
+                                launchUrl(Uri.parse(paymentUrl), mode: LaunchMode.externalApplication);
+                                
+                                if (kDebugMode) {
+                                  print('外跳支付成功');
+                                }
+                                
+                                // 延迟关闭对话框，确保外跳成功
+                                Future.delayed(const Duration(milliseconds: 100), () {
+                                  try {
+                                    // 关闭两个对话框
+                                    if (context.mounted) {
+                                      Navigator.of(context).pop(); // 关闭支付方式对话框
+                                      Navigator.of(context).pop(); // 关闭购买详情对话框
+                                    }
+                                  } catch (e) {
+                                    if (kDebugMode) {
+                                      print('关闭对话框失败: $e');
+                                    }
+                                  }
+                                });
+                              } catch (e) {
+                                if (kDebugMode) {
+                                  print('外跳支付失败: $e');
+                                }
+                                // 如果外跳失败，显示错误信息
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('支付链接打开失败，请手动复制链接到浏览器')),
+                                );
+                              }
+                            },
                           );
                         },
                       );
-                    } else {
-                      // 兜底：改为携带 token 直接外部浏览器拉起
-                      final token = await getToken();
-                      final base = HttpService.baseUrl;
-                      final path = DomainService.cashierPath; // '/#/payment?trade_no='
-                      final extra = token != null
-                          ? '&auth_data=${Uri.encodeComponent(token)}&token=${Uri.encodeComponent(token)}&access_token=${Uri.encodeComponent(token)}'
-                          : '';
-                      final uri = Uri.parse('$base$path$tradeNo$extra');
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    }
+                                         } else {
+                       // 兜底：直接外跳支付
+                       if (kDebugMode) {
+                         print('没有支付方式，使用兜底外跳方案');
+                       }
+                       // 这里可以显示一个提示，告知用户没有可用的支付方式
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(content: Text('暂无可用的支付方式')),
+                       );
+                     }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(t.payments.noSuchPlan)),
@@ -366,7 +445,8 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
                   style: const TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
-            ),
+                ],
+              ),
           ],
         ),
       ),

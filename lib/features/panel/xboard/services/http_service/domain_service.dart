@@ -14,12 +14,21 @@ class DomainService {
   static bool allowSelfSigned = false;
 
   static Future<String> fetchValidDomain() async {
+    print('DomainService.fetchValidDomain() called');
+    print('Fetching config from: $ossDomain');
+    
     try {
       final response = await http
           .get(Uri.parse(ossDomain))
           .timeout(const Duration(seconds: 10));
+      
+      print('Config response status: ${response.statusCode}');
+      print('Config response body: ${response.body}');
+      
       if (response.statusCode == 200) {
         final List<dynamic> items = json.decode(response.body) as List<dynamic>;
+        print('Config items count: ${items.length}');
+        
         String? firstUrl;
         for (final dynamic it in items) {
           if (it is Map<String, dynamic>) {
@@ -43,33 +52,27 @@ class DomainService {
             final String? domain = it['url'] as String?;
             if (domain != null && domain.isNotEmpty) {
               firstUrl ??= domain;
-              // 自签/被墙时跳过探活，直接使用
-              if (allowSelfSigned) {
-                if (kDebugMode) print('Using (allow_self_signed) domain: $domain');
-                return domain;
-              }
-              if (await _checkDomainAccessibility(domain)) {
-                if (kDebugMode) print('Valid domain found: $domain');
-                return domain;
-              }
+              // 直接返回第一个域名，跳过检测（因为反代服务器可能响应慢）
+              print('Using domain from config: $domain');
+              return domain;
             }
           }
         }
-        // 如果没有任何可探活成功的，且有 firstUrl，返回它（配合自签场景）
-        if (firstUrl != null) return firstUrl!;
+        // 如果没有任何域名，且有 firstUrl，返回它
+        if (firstUrl != null) {
+          print('Using firstUrl as fallback: $firstUrl');
+          return firstUrl!;
+        }
       }
 
-      if (await _checkDomainAccessibility(v2boardDomain)) {
-        if (kDebugMode) print('Using v2board domain: $v2boardDomain');
-        return v2boardDomain;
-      }
-
-      throw Exception('No accessible domains found.');
+      // 如果远程配置失败，使用默认域名
+      print('Using fallback domain: $v2boardDomain');
+      return v2boardDomain;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching valid domain: $ossDomain:  $e');
-      }
-      rethrow;
+      print('Error fetching valid domain: $ossDomain:  $e');
+      // 出错时返回默认域名，而不是抛出异常
+      print('Using fallback domain due to error: $v2boardDomain');
+      return v2boardDomain;
     }
   }
 

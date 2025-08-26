@@ -33,12 +33,38 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> sendVerificationCode(String email) async {
-    return await _httpService.postRequest(
-      "/api/v1/guest/comm/sendEmailVerify",
-      {"email": email, "scene": "register"},
-      requiresHeaders: true,
-      sendAsJson: false,
-    );
+    // 尝试多个可能的接口路径
+    try {
+      // 方案1：尝试可能的正确路径
+      final response = await _httpService.postRequest(
+        "/api/v1/passport/auth/sendEmailVerify",
+        {"email": email, "scene": "register"},
+        requiresHeaders: true,
+        sendAsJson: false,
+      );
+      return response;
+    } catch (e) {
+      print('接口 /api/v1/passport/auth/sendEmailVerify 不可用: $e');
+      
+      try {
+        // 方案2：尝试另一个可能的路径
+        final response2 = await _httpService.postRequest(
+          "/api/v1/guest/auth/sendEmailVerify",
+          {"email": email, "scene": "register"},
+          requiresHeaders: true,
+          sendAsJson: false,
+        );
+        return response2;
+      } catch (e2) {
+        print('接口 /api/v1/guest/auth/sendEmailVerify 也不可用: $e2');
+        
+        // 如果都不可用，返回错误信息
+        return {
+          'status': 'error',
+          'message': '邮箱验证服务暂时不可用，请联系管理员'
+        };
+      }
+    }
   }
 
   Future<Map<String, dynamic>> resetPassword(

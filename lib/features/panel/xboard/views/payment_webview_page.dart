@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hiddify/features/panel/xboard/services/http_service/http_service.dart';
 import 'package:hiddify/features/panel/xboard/services/http_service/domain_service.dart';
 import 'package:hiddify/features/panel/xboard/utils/storage/token_storage.dart';
@@ -8,8 +9,8 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PaymentWebViewPage extends StatefulWidget {
-  final String tradeNo;
-  const PaymentWebViewPage({super.key, required this.tradeNo});
+  final String paymentUrl;
+  const PaymentWebViewPage({super.key, required this.paymentUrl});
 
   @override
   State<PaymentWebViewPage> createState() => _PaymentWebViewPageState();
@@ -26,25 +27,17 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
   }
 
   String _buildCashierUrl() {
-    final base = HttpService.baseUrl;
-    final cashPath = DomainService.cashierPath;
-    if (cashPath.contains('trade_no=')) {
-      return "$base$cashPath${cashPath.contains('?') ? '&' : '?'}trade_no=${widget.tradeNo}";
-    }
-    if (cashPath.contains('?')) {
-      return "$base$cashPath&trade_no=${widget.tradeNo}";
-    }
-    return "$base$cashPath/${widget.tradeNo}";
+    // 直接使用传入的支付链接
+    return widget.paymentUrl;
   }
 
   Future<void> _bootstrapAndLoad() async {
     _targetUrl = _buildCashierUrl();
 
-    // Windows/Android + 自签：直接外跳，避免灰屏
-    if ((Platform.isWindows || Platform.isAndroid) && DomainService.allowSelfSigned) {
-      await launchUrl(Uri.parse(_targetUrl!), mode: LaunchMode.externalApplication);
-      if (mounted) Navigator.of(context).pop();
-      return;
+    // 对于支付链接，我们优先在应用内显示，而不是外跳
+    // 只有在加载失败时才考虑外跳
+    if (kDebugMode) {
+      print('PaymentWebViewPage: 准备加载支付链接: $_targetUrl');
     }
 
     final token = await getToken();
@@ -90,14 +83,28 @@ class _PaymentWebViewPageState extends State<PaymentWebViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    final externalOnly = (DomainService.allowSelfSigned && (Platform.isWindows || Platform.isAndroid));
+    // 优先在应用内显示支付页面，而不是外跳
     return Scaffold(
-      appBar: AppBar(title: const Text('支付')),
+      appBar: AppBar(
+        title: const Text('支付'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.open_in_browser),
+            onPressed: () async {
+              // 提供外跳选项
+              await launchUrl(Uri.parse(_targetUrl!), mode: LaunchMode.externalApplication);
+            },
+            tooltip: '在外部浏览器中打开',
+          ),
+        ],
+      ),
       body: _targetUrl == null
           ? const Center(child: CircularProgressIndicator())
-          : externalOnly
-              ? const SizedBox.shrink()
-              : InAppWebView(
+          : InAppWebView(
                   initialUrlRequest: URLRequest(url: WebUri(_targetUrl!)),
                   initialSettings: InAppWebViewSettings(
                     javaScriptEnabled: true,
