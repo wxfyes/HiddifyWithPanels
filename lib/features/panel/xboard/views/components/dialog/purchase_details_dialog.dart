@@ -14,6 +14,7 @@ import 'package:hiddify/features/panel/xboard/services/http_service/http_service
 import 'package:hiddify/features/panel/xboard/views/payment_webview_page.dart';
 import 'package:hiddify/features/panel/xboard/services/http_service/domain_service.dart';
 import 'package:hiddify/features/panel/xboard/utils/storage/token_storage.dart';
+import 'package:flutter/foundation.dart';
 
 void showPurchaseDialog(
     BuildContext context, Plan plan, Translations t, WidgetRef ref) {
@@ -46,34 +47,43 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
   void initState() {
     super.initState();
 
+    // 确定初始的默认选择
+    String? initialPeriod;
+    double? initialPrice;
+    
+    if (widget.plan.monthPrice != null) {
+      initialPeriod = 'month_price';
+      initialPrice = widget.plan.monthPrice;
+    } else if (widget.plan.quarterPrice != null) {
+      initialPeriod = 'quarter_price';
+      initialPrice = widget.plan.quarterPrice;
+    } else if (widget.plan.halfYearPrice != null) {
+      initialPeriod = 'half_year_price';
+      initialPrice = widget.plan.halfYearPrice;
+    } else if (widget.plan.yearPrice != null) {
+      initialPeriod = 'year_price';
+      initialPrice = widget.plan.yearPrice;
+    } else if (widget.plan.twoYearPrice != null) {
+      initialPeriod = 'two_year_price';
+      initialPrice = widget.plan.twoYearPrice;
+    } else if (widget.plan.threeYearPrice != null) {
+      initialPeriod = 'three_year_price';
+      initialPrice = widget.plan.threeYearPrice;
+    } else if (widget.plan.onetimePrice != null) {
+      initialPeriod = 'onetime_price';
+      initialPrice = widget.plan.onetimePrice;
+    }
+
     _params = PurchaseDetailsViewModelParams(
       planId: widget.plan.id,
+      initialPeriod: initialPeriod,
+      initialPrice: initialPrice,
     );
 
     _provider = purchaseDetailsViewModelProvider(_params);
-
-    // 立即初始化选择的价格和周期，不使用 addPostFrameCallback
-    _initializeDefaultSelection();
   }
 
-  void _initializeDefaultSelection() {
-    // 直接初始化，确保状态立即设置
-    if (widget.plan.monthPrice != null) {
-      ref.read(_provider).setSelectedPrice(widget.plan.monthPrice!, 'month_price');
-    } else if (widget.plan.quarterPrice != null) {
-      ref.read(_provider).setSelectedPrice(widget.plan.quarterPrice!, 'quarter_price');
-    } else if (widget.plan.halfYearPrice != null) {
-      ref.read(_provider).setSelectedPrice(widget.plan.halfYearPrice!, 'half_year_price');
-    } else if (widget.plan.yearPrice != null) {
-      ref.read(_provider).setSelectedPrice(widget.plan.yearPrice!, 'year_price');
-    } else if (widget.plan.twoYearPrice != null) {
-      ref.read(_provider).setSelectedPrice(widget.plan.twoYearPrice!, 'two_year_price');
-    } else if (widget.plan.threeYearPrice != null) {
-      ref.read(_provider).setSelectedPrice(widget.plan.threeYearPrice!, 'three_year_price');
-    } else if (widget.plan.onetimePrice != null) {
-      ref.read(_provider).setSelectedPrice(widget.plan.onetimePrice!, 'onetime_price');
-    }
-  }
+
 
   // 新增：强制设置默认选择的方法
   void _forceSetDefaultSelection() {
@@ -147,28 +157,6 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
   Widget build(BuildContext context) {
     final viewModel = ref.watch(_provider);
     final t = ref.watch(translationsProvider);
-    
-    // 确保初始化选中状态
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (viewModel.selectedPeriod == null) {
-        // 直接选择月付作为默认选项
-        if (widget.plan.monthPrice != null) {
-          viewModel.setSelectedPrice(widget.plan.monthPrice!, 'month_price');
-        } else if (widget.plan.quarterPrice != null) {
-          viewModel.setSelectedPrice(widget.plan.quarterPrice!, 'quarter_price');
-        } else if (widget.plan.halfYearPrice != null) {
-          viewModel.setSelectedPrice(widget.plan.halfYearPrice!, 'half_year_price');
-        } else if (widget.plan.yearPrice != null) {
-          viewModel.setSelectedPrice(widget.plan.yearPrice!, 'year_price');
-        } else if (widget.plan.twoYearPrice != null) {
-          viewModel.setSelectedPrice(widget.plan.twoYearPrice!, 'two_year_price');
-        } else if (widget.plan.threeYearPrice != null) {
-          viewModel.setSelectedPrice(widget.plan.threeYearPrice!, 'three_year_price');
-        } else if (widget.plan.onetimePrice != null) {
-          viewModel.setSelectedPrice(widget.plan.onetimePrice!, 'onetime_price');
-        }
-      }
-    });
     
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -280,6 +268,43 @@ class _PurchaseDetailsDialogState extends ConsumerState<PurchaseDetailsDialog> {
                     
                     // 再次验证
                     if (viewModel.selectedPeriod == null || viewModel.selectedPrice == null) {
+                      // 兜底：即使状态验证失败，也尝试直接跳转支付
+                      // 使用最便宜的价格作为默认值
+                      final cheapestPrice = _findCheapestPrice();
+                      if (cheapestPrice != null) {
+                        final cheapestPeriod = _findCheapestPeriod(cheapestPrice);
+                        if (cheapestPeriod != null) {
+                          // 强制设置状态
+                          viewModel.setSelectedPrice(cheapestPrice, cheapestPeriod);
+                          
+                          // 尝试创建订单
+                          try {
+                            final accessToken = await getToken();
+                            if (accessToken != null) {
+                              // 直接尝试创建订单并跳转支付
+                              final paymentMethods = await viewModel.handleSubscribe();
+                              final tradeNo = viewModel.tradeNo;
+                              
+                              if (tradeNo != null) {
+                                // 直接跳转支付
+                                final base = HttpService.baseUrl;
+                                final path = DomainService.cashierPath;
+                                final extra = '&auth_data=${Uri.encodeComponent(accessToken)}&token=${Uri.encodeComponent(accessToken)}&access_token=${Uri.encodeComponent(accessToken)}';
+                                final uri = Uri.parse('$base$path$tradeNo$extra');
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                return; // 成功跳转，直接返回
+                              }
+                            }
+                          } catch (e) {
+                            // 如果直接跳转失败，显示错误信息
+                            if (kDebugMode) {
+                              print('Direct payment jump failed: $e');
+                            }
+                          }
+                        }
+                      }
+                      
+                      // 如果所有兜底都失败，显示错误信息
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('请选择订阅时长')),
                       );
