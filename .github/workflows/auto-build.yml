@@ -292,31 +292,34 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Debug Inputs
-        run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Create release: ${{ github.event.inputs.create_release }}"
-          echo "Tag name: ${{ github.event.inputs.tag_name }}"
-          echo "Platform: ${{ github.event.inputs.platform }}"
-          
-      - name: Check if should create release
-        if: github.event.inputs.create_release == 'true'
-        run: |
-          echo "Creating release..."
-          
-      - name: Skip release creation
-        if: github.event.inputs.create_release != 'true'
-        run: |
-          echo "Skipping release creation - create_release is not 'true'"
-          
       - name: Download all artifacts
-        if: github.event.inputs.create_release == 'true'
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
+      - name: Extract Android Artifacts
+        run: |
+          echo "=== Extracting Android artifacts ==="
+          ls -la artifacts/
+          echo "=== Android builds content ==="
+          ls -la artifacts/android-builds/
+          
+          # 如果Android artifacts是压缩包，解压它
+          if [ -f "artifacts/android-builds/android-builds.zip" ]; then
+            echo "Found android-builds.zip, extracting..."
+            cd artifacts/android-builds
+            unzip android-builds.zip
+            ls -la
+            cd ../..
+          fi
+          
+          echo "=== Windows builds content ==="
+          ls -la artifacts/windows-builds/
+          
+          echo "=== Final artifacts structure ==="
+          find artifacts/ -type f -name "*.apk" -o -name "*.aab" -o -name "*.exe" -o -name "*.msix" -o -name "*.dmg" -o -name "*.pkg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" | head -20
+
       - name: Create Release
-        if: github.event.inputs.create_release == 'true'
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -339,12 +342,21 @@ jobs:
             This release was created manually via workflow dispatch.
             ${{ github.event.inputs.tag_name == '' && 'Tag name was auto-generated.' || '' }}
           files: |
-            artifacts/android-builds/*
-            artifacts/windows-builds/*
-            artifacts/macos-builds/*
-            artifacts/linux-builds/*
-            # 特别包含MSIX文件
-            artifacts/windows-builds/*.msix
+            # 使用通配符匹配所有文件，确保包含所有平台
+            artifacts/**/*.apk
+            artifacts/**/*.aab
+            artifacts/**/*.exe
+            artifacts/**/*.msix
+            artifacts/**/*.dmg
+            artifacts/**/*.pkg
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/*.rpm
+            # 备用路径，以防上面的路径找不到文件
+            artifacts/android-builds/**/*
+            artifacts/windows-builds/**/*
+            artifacts/macos-builds/**/*
+            artifacts/linux-builds/**/*
           draft: false
           prerelease: false
 
