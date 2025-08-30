@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       platform:
-        description: 'Platform to build (all, android, windows, macos, linux, ios)'
+        description: 'Platform to build (all, android, windows, macos, linux)'
         required: false
         default: 'all'
         type: choice
@@ -26,7 +26,15 @@ on:
         - windows
         - macos
         - linux
-        - ios
+      tag_name:
+        description: 'Tag name for release (e.g., v1.0.0)'
+        required: false
+        type: string
+      create_release:
+        description: 'Create release after build'
+        required: false
+        default: false
+        type: boolean
 
 env:
   IS_GITHUB_ACTIONS: 1
@@ -36,7 +44,6 @@ env:
   TARGET_NAME_exe: "HiddifyWithPanels-Windows-x64"
   TARGET_NAME_dmg: "HiddifyWithPanels-MacOS"
   TARGET_NAME_pkg: "HiddifyWithPanels-MacOS-Installer"
-  TARGET_NAME_ipa: "HiddifyWithPanels-iOS"
   TARGET_NAME_AppImage: "HiddifyWithPanels-Linux-x64"
   TARGET_NAME_deb: "HiddifyWithPanels-Debian-x64"
   TARGET_NAME_rpm: "HiddifyWithPanels-rpm-x64"
@@ -278,61 +285,52 @@ jobs:
           path: ./out
           retention-days: 30
 
-  build_ios:
-    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'ios' || github.event.inputs.platform == ''
-    runs-on: macos-12
+  create_release_manual:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == true && github.event.inputs.tag_name != ''
+    needs: [build_android, build_windows, build_macos, build_linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-  
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2.16.0
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-          cache: true
-  
-      - name: Clean Flutter Build
-        run: |
-          flutter clean
-  
-      - name: Get Flutter Packages
-        run: |
-          flutter pub get
-  
-      - name: Reinstall iOS Dependencies
-        run: |
-          cd ios
-          rm -rf Pods Podfile.lock
-          pod install
-          
-      - name: Install tree
-        run: brew install tree
+          path: artifacts
 
-      - name: Prepare for iOS
-        run: |
-          make ios-prepare
-          tree
-  
-      - name: Build iOS (No Code Sign)
-        run: |
-          flutter build ipa --no-codesign
-  
-      - name: Package iOS
-        run: |
-          mkdir out
-          mv build/ios/ipa/*.ipa out/${TARGET_NAME_ipa}-unsigned.ipa
-  
-      - name: Upload iOS Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          name: ios-builds
-          path: ./out
-          retention-days: 30
+          tag_name: ${{ github.event.inputs.tag_name }}
+          name: Release ${{ github.event.inputs.tag_name }}
+          body: |
+            ## HiddifyWithPanels ${{ github.event.inputs.tag_name }}
+            
+            ### Downloads
+            - **Android**: APK and AAB files available
+            - **Windows**: Setup and Portable versions
+            - **macOS**: DMG and PKG installers
+            - **Linux**: AppImage, DEB, and RPM packages
+            
+            ### Changes
+            See the [changelog](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for detailed changes.
+            
+            ### Note
+            This release was created manually via workflow dispatch.
+          files: |
+            artifacts/android-builds/*
+            artifacts/windows-builds/*
+            artifacts/macos-builds/*
+            artifacts/linux-builds/*
+            # 特别包含MSIX文件
+            artifacts/windows-builds/*.msix
+          draft: false
+          prerelease: false
 
   create_release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build_android, build_windows, build_macos, build_linux, build_ios]
+    needs: [build_android, build_windows, build_macos, build_linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -357,20 +355,14 @@ jobs:
             - **Windows**: Setup and Portable versions
             - **macOS**: DMG and PKG installers
             - **Linux**: AppImage, DEB, and RPM packages
-            - **iOS**: Unsigned IPA file (for development/testing only)
             
             ### Changes
             See the [changelog](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for detailed changes.
-            
-            ### iOS Note
-            The iOS IPA file is unsigned and cannot be installed on devices without developer tools. 
-            For distribution, you need an Apple Developer account and code signing.
           files: |
             artifacts/android-builds/*
             artifacts/windows-builds/*
             artifacts/macos-builds/*
             artifacts/linux-builds/*
-            artifacts/ios-builds/*
             # 特别包含MSIX文件
             artifacts/windows-builds/*.msix
           draft: false
