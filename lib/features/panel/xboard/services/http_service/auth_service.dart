@@ -61,7 +61,7 @@ class AuthService {
         // 如果都不可用，返回错误信息
         return {
           'status': 'error',
-          'message': '邮箱验证服务暂时不可用，请联系管理员'
+          'message': '邮箱验证服务暂时不可用，请进官网注册'
         };
       }
     }
