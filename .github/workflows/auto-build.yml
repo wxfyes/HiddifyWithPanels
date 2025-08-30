@@ -286,18 +286,37 @@ jobs:
           retention-days: 30
 
   create_release_manual:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == true
+    if: github.event_name == 'workflow_dispatch'
     needs: [build_android, build_windows, build_macos, build_linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - name: Debug Inputs
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Create release: ${{ github.event.inputs.create_release }}"
+          echo "Tag name: ${{ github.event.inputs.tag_name }}"
+          echo "Platform: ${{ github.event.inputs.platform }}"
+          
+      - name: Check if should create release
+        if: github.event.inputs.create_release == 'true'
+        run: |
+          echo "Creating release..."
+          
+      - name: Skip release creation
+        if: github.event.inputs.create_release != 'true'
+        run: |
+          echo "Skipping release creation - create_release is not 'true'"
+          
       - name: Download all artifacts
+        if: github.event.inputs.create_release == 'true'
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
       - name: Create Release
+        if: github.event.inputs.create_release == 'true'
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
