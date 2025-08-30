@@ -286,7 +286,7 @@ jobs:
           retention-days: 30
 
   create_release_manual:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == true && github.event.inputs.tag_name != ''
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == true
     needs: [build_android, build_windows, build_macos, build_linux]
     runs-on: ubuntu-latest
     permissions:
@@ -302,10 +302,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          tag_name: ${{ github.event.inputs.tag_name }}
-          name: Release ${{ github.event.inputs.tag_name }}
+          tag_name: ${{ github.event.inputs.tag_name != '' && github.event.inputs.tag_name || format('v{0}', github.run_number) }}
+          name: Release ${{ github.event.inputs.tag_name != '' && github.event.inputs.tag_name || format('v{0}', github.run_number) }}
           body: |
-            ## HiddifyWithPanels ${{ github.event.inputs.tag_name }}
+            ## HiddifyWithPanels ${{ github.event.inputs.tag_name != '' && github.event.inputs.tag_name || format('v{0}', github.run_number) }}
             
             ### Downloads
             - **Android**: APK and AAB files available
@@ -318,6 +318,7 @@ jobs:
             
             ### Note
             This release was created manually via workflow dispatch.
+            ${{ github.event.inputs.tag_name == '' && 'Tag name was auto-generated.' || '' }}
           files: |
             artifacts/android-builds/*
             artifacts/windows-builds/*
